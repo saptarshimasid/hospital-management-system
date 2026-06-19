@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Health Copilot | Physician Registry</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary": "#00363a",
+            "on-tertiary-fixed-variant": "#005047",
+            "inverse-on-surface": "#283044",
+            "on-secondary-container": "#00566b",
+            "on-error": "#690005",
+            "on-secondary-fixed-variant": "#004e60",
+            "secondary-fixed-dim": "#4cd6ff",
+            "on-surface": "#dae2fd",
+            "tertiary": "#d1fff5",
+            "surface-dim": "#0b1326",
+            "on-primary-fixed": "#002022",
+            "inverse-surface": "#dae2fd",
+            "surface-bright": "#31394d",
+            "surface-container-low": "#131b2e",
+            "on-secondary-fixed": "#001f28",
+            "surface": "#0b1326",
+            "on-tertiary-fixed": "#00201c",
+            "surface-container-high": "#222a3d",
+            "primary-fixed": "#7df4ff",
+            "outline": "#849495",
+            "on-error-container": "#ffdad6",
+            "tertiary-fixed": "#62fae3",
+            "surface-container-lowest": "#060e20",
+            "on-secondary": "#003543",
+            "surface-variant": "#2d3449",
+            "on-primary-container": "#006970",
+            "surface-container-highest": "#2d3449",
+            "error": "#ffb4ab",
+            "background": "#0b1326",
+            "secondary-container": "#14d1ff",
+            "outline-variant": "#3b494b",
+            "inverse-primary": "#006970",
+            "tertiary-container": "#56f0da",
+            "primary-fixed-dim": "#00dbe9",
+            "secondary-fixed": "#b7eaff",
+            "on-tertiary": "#003731",
+            "primary-container": "#00f0ff",
+            "primary": "#dbfcff",
+            "on-surface-variant": "#b9cacb",
+            "on-tertiary-container": "#006b5f",
+            "on-primary-fixed-variant": "#004f54",
+            "surface-container": "#171f33",
+            "secondary": "#a6e6ff",
+            "on-background": "#dae2fd",
+            "surface-tint": "#00dbe9",
+            "error-container": "#93000a",
+            "tertiary-fixed-dim": "#3cddc7"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "sm": "16px",
+            "xs": "8px",
+            "md": "24px",
+            "margin-desktop": "40px",
+            "gutter": "24px",
+            "base": "4px",
+            "xl": "48px",
+            "margin-mobile": "16px",
+            "lg": "32px"
+          },
+          "fontFamily": {
+            "body-sm": ["Inter"],
+            "headline-lg": ["Inter"],
+            "label-md": ["Geist"],
+            "headline-md": ["Inter"],
+            "body-md": ["Inter"],
+            "display-lg": ["Inter"],
+            "headline-lg-mobile": ["Inter"],
+            "body-lg": ["Inter"],
+            "data-mono": ["Geist"]
+          },
+          "fontSize": {
+            "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+            "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+            "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0b1326;
+      color: #dae2fd;
+      overflow-x: hidden;
+    }
+    .glass-card {
+      background: rgba(23, 31, 51, 0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      background: rgba(23, 31, 51, 0.5);
+      transform: translateY(-4px);
+    }
+    .inner-glow {
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    }
+    .active-glow {
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    /* Modal Dialog */
+    dialog::backdrop {
+      background: rgba(6, 14, 32, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0;
+      transition: opacity 0.3s ease-out;
+    }
+    dialog[open]::backdrop {
+      opacity: 1;
+    }
+    dialog {
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+      transition: opacity 0.3s ease-out, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    dialog[open] {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  </style>
+</head>
+<body class="font-body-md text-body-md antialiased">
+  <!-- Sidebar Navigation -->
+  <aside class="h-screen w-72 fixed left-0 top-0 bg-surface/60 backdrop-blur-xl border-r border-white/10 shadow-2xl flex flex-col py-md z-50">
+    <div class="px-md mb-xl">
+      <h1 class="font-headline-md text-headline-md font-bold text-primary">Health Copilot</h1>
+      <p class="font-label-md text-label-md text-on-surface-variant opacity-70">Medical Command Center</p>
+    </div>
+    <nav class="flex-1 space-y-1">
+      <!-- Dashboard -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="admin_dashboard.html">
+        <span class="material-symbols-outlined">dashboard</span>
+        <span class="font-label-md text-label-md">Dashboard</span>
+      </a>
+      <!-- Appointments -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="appointments.html">
+        <span class="material-symbols-outlined">calendar_today</span>
+        <span class="font-label-md text-label-md">Appointments</span>
+      </a>
+      <!-- Bed Availability -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="bed_availability.html">
+        <span class="material-symbols-outlined">bed</span>
+        <span class="font-label-md text-label-md">Bed Availability</span>
+      </a>
+      <!-- OT -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="ot.html">
+        <span class="material-symbols-outlined">surgical</span>
+        <span class="font-label-md text-label-md">OT</span>
+      </a>
+      <!-- Doctor (Active) -->
+      <a class="flex items-center gap-3 px-6 py-4 text-tertiary-container border-l-4 border-tertiary-container bg-tertiary-container/10 transition-all duration-150 active:scale-[0.98]" href="doctor.html">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person_filled</span>
+        <span class="font-label-md text-label-md">Doctor</span>
+      </a>
+      <!-- Patients -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="patients.html">
+        <span class="material-symbols-outlined">groups</span>
+        <span class="font-label-md text-label-md">Patients</span>
+      </a>
+      <!-- Staff -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="staff.html">
+        <span class="material-symbols-outlined">medical_services</span>
+        <span class="font-label-md text-label-md">Staff</span>
+      </a>
+      <!-- Pharmacy -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="pharmacy.html">
+        <span class="material-symbols-outlined">medication</span>
+        <span class="font-label-md text-label-md">Pharmacy</span>
+      </a>
+      <!-- Pantry -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="pantry.html">
+        <span class="material-symbols-outlined">restaurant</span>
+        <span class="font-label-md text-label-md">Pantry</span>
+      </a>
+      <!-- Billing -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="billing.html">
+        <span class="material-symbols-outlined">payments</span>
+        <span class="font-label-md text-label-md">Billing</span>
+      </a>
+      <!-- Revenue -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="revenue.html">
+        <span class="material-symbols-outlined">trending_up</span>
+        <span class="font-label-md text-label-md">Revenue</span>
+      </a>
+      <!-- Reports -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="reports.html">
+        <span class="material-symbols-outlined">analytics</span>
+        <span class="font-label-md text-label-md">Reports</span>
+      </a>
+      <!-- Settings -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="#">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="font-label-md text-label-md">Settings</span>
+      </a>
+    </nav>
+    <div class="mt-auto px-md pt-md border-t border-white/5">
+      <div class="flex items-center gap-3 p-3 rounded-xl bg-surface-container-high/40">
+        <img class="w-10 h-10 rounded-full border border-primary/20" alt="Dr. Sarah Jenkins" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o">
+        <div class="overflow-hidden">
+          <p class="font-label-md text-label-md font-bold truncate">Dr. Sarah Jenkins</p>
+          <p class="text-[10px] uppercase tracking-wider text-primary opacity-70">Chief Medical Officer</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Top Navigation -->
+  <header class="fixed top-0 right-0 w-[calc(100%-18rem)] h-20 z-40 bg-surface-container/40 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-margin-desktop shadow-sm">
+    <div class="flex items-center gap-lg">
+      <div class="relative w-96">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-md">search</span>
+        <input id="doctorSearchInput" class="w-full bg-surface-container-lowest border-none rounded-full py-2 pl-10 pr-4 text-body-sm focus:ring-2 focus:ring-primary-container/50 text-on-surface placeholder-on-surface-variant/50" placeholder="Search registry by name, email, or department..." type="text">
+      </div>
+    </div>
+    <div class="flex items-center gap-md">
+      <button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-variant/20 transition-all relative">
+        <span class="material-symbols-outlined">notifications</span>
+        <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+      </button>
+      <button class="w-10 h-10 flex items-center justify-center rounded-full overflow-hidden border border-white/10 hover:bg-surface-variant/20 transition-all">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o" alt="Profile" class="w-full h-full object-cover">
+      </button>
+      <a href="login_selection.html" class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-variant/20 transition-all">
+        <span class="material-symbols-outlined">logout</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content Canvas -->
+  <main class="ml-72 pt-24 px-margin-desktop pb-xl min-h-screen">
+    <!-- Welcome Header -->
+    <section class="mb-lg flex justify-between items-end">
+      <div>
+        <h2 class="font-headline-lg text-headline-lg text-primary flex items-center gap-2">
+          <span class="material-symbols-outlined text-[32px]">person_filled</span>
+          Physician Registry
+        </h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">Manage physician credentials, active duty statuses, and clinical rosters.</p>
+      </div>
+      <div class="flex gap-sm">
+        <button class="bg-surface-container-high px-4 py-2 rounded-lg text-label-md font-label-md hover:bg-surface-variant/40 transition-colors flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+          <span class="header-date-text">Feb 24, 2024</span>
+        </button>
+        <button onclick="openAddModal()" class="bg-gradient-to-r from-primary-container to-secondary-container text-on-primary font-bold px-6 py-2 rounded-lg text-label-md hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2 active-glow">
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          Add Physician
+        </button>
+      </div>
+    </section>
+
+    <!-- Stats Grid -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-lg">
+      <div class="glass-card p-md rounded-xl inner-glow">
+        <div class="w-10 h-10 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary-container mb-sm">
+          <span class="material-symbols-outlined">work</span>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant">Total Registered</p>
+        <h3 id="statTotalDoctors" class="font-headline-md text-headline-md mt-1">156</h3>
+      </div>
+      <div class="glass-card p-md rounded-xl inner-glow">
+        <div class="w-10 h-10 rounded-lg bg-tertiary-container/20 flex items-center justify-center text-tertiary-container mb-sm">
+          <span class="material-symbols-outlined">check_circle</span>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant">Available</p>
+        <h3 id="statAvailableDoctors" class="font-headline-md text-headline-md mt-1">2</h3>
+      </div>
+      <div class="glass-card p-md rounded-xl inner-glow">
+        <div class="w-10 h-10 rounded-lg bg-error/20 flex items-center justify-center text-error mb-sm">
+          <span class="material-symbols-outlined">heart_broken</span>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant">Busy / In Surgery</p>
+        <h3 id="statBusyDoctors" class="font-headline-md text-headline-md mt-1">1</h3>
+      </div>
+      <div class="glass-card p-md rounded-xl inner-glow">
+        <div class="w-10 h-10 rounded-lg bg-secondary-container/20 flex items-center justify-center text-secondary-container mb-sm">
+          <span class="material-symbols-outlined">chat</span>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant">Consulting</p>
+        <h3 id="statConsultingDoctors" class="font-headline-md text-headline-md mt-1">1</h3>
+      </div>
+    </section>
+
+    <!-- Filter and Table Section -->
+    <section class="glass-card rounded-2xl p-lg inner-glow">
+      <div class="flex justify-between items-center mb-lg">
+        <h4 class="font-headline-md text-headline-md">Physician Roster</h4>
+        <div class="flex items-center gap-md">
+          <div class="flex items-center gap-xs">
+            <span class="font-data-mono text-[11px] text-on-surface-variant">Department:</span>
+            <select id="deptFilter" onchange="filterDoctors()" class="bg-surface-container border-none text-body-sm rounded-lg py-1.5 px-3 focus:ring-1 focus:ring-primary text-on-surface">
+              <option value="all">All Departments</option>
+              <option value="cardiology">Cardiology</option>
+              <option value="neurology">Neurology</option>
+              <option value="pediatrics">Pediatrics</option>
+              <option value="gen medicine">Gen Medicine</option>
+              <option value="emergency">Emergency</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-xs">
+            <span class="font-data-mono text-[11px] text-on-surface-variant">Duty Status:</span>
+            <select id="statusFilter" onchange="filterDoctors()" class="bg-surface-container border-none text-body-sm rounded-lg py-1.5 px-3 focus:ring-1 focus:ring-primary text-on-surface">
+              <option value="all">All Statuses</option>
+              <option value="available">Available</option>
+              <option value="busy">Busy</option>
+              <option value="consulting">Consulting</option>
+              <option value="off-duty">Off Duty</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="text-on-surface-variant font-label-md uppercase tracking-wider text-[11px] border-b border-white/10">
+              <th class="pb-4 font-normal">Physician Name</th>
+              <th class="pb-4 font-normal">Department</th>
+              <th class="pb-4 font-normal">Email Address</th>
+              <th class="pb-4 font-normal">Shift Schedule</th>
+              <th class="pb-4 font-normal">Status</th>
+              <th class="pb-4 font-normal text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="doctorTableBody" class="text-body-sm font-body-sm divide-y divide-white/5">
+            <!-- Dynamic rows loaded here -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Add Doctor Modal -->
+  <dialog id="addDialog" class="m-auto backdrop:bg-[#0b1326]/60 backdrop:backdrop-blur-sm glass-card p-lg rounded-2xl w-full max-w-lg bg-[#0b1326]/95 border border-white/10 text-[#dae2fd] shadow-2xl backdrop-blur-xl">
+    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f0ff] to-transparent"></div>
+    <div class="flex justify-between items-center mb-md pb-xs border-b border-white/5">
+      <div>
+        <h3 class="font-headline-md text-headline-md text-primary">Register New Physician</h3>
+        <p class="text-[11px] text-on-surface-variant">Add a credentials profile to the clinical directory</p>
+      </div>
+      <button onclick="closeAddModal()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/5 text-on-surface-variant hover:text-error transition-all">
+        <span class="material-symbols-outlined !text-xl">close</span>
+      </button>
+    </div>
+
+    <form id="addForm" onsubmit="handleAddSubmit(event)" class="space-y-4">
+      <div class="space-y-1">
+        <label class="text-[11px] text-on-surface-variant uppercase tracking-wider">Doctor Name</label>
+        <input id="formName" required class="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]" placeholder="e.g. Dr. John Doe" type="text">
+      </div>
+      <div class="grid grid-cols-2 gap-sm">
+        <div class="space-y-1">
+          <label class="text-[11px] text-on-surface-variant uppercase tracking-wider">Gender</label>
+          <select id="formGender" class="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 px-3 text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-on-surface-variant uppercase tracking-wider">Age</label>
+          <input id="formAge" required class="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 px-3 text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]" placeholder="e.g. 45" type="number" min="20">
+        </div>
+      </div>
+      <div class="space-y-1">
+        <label class="text-[11px] text-on-surface-variant uppercase tracking-wider">Email Address</label>
+        <input id="formEmail" required class="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]" placeholder="e.g. doctor@healthcopilot.com" type="email">
+      </div>
+      <div class="grid grid-cols-2 gap-sm">
+        <div class="space-y-1">
+          <label class="text-[11px] text-on-surface-variant uppercase tracking-wider">Department</label>
+          <select id="formDept" class="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 px-3 text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]">
+            <option value="Cardiology">Cardiology</option>
+            <option value="Neurology">Neurology</option>
+            <option value="Pediatrics">Pediatrics</option>
+            <option value="Gen Medicine">Gen Medicine</option>
+            <option value="Emergency">Emergency</option>
+          </select>
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-on-surface-variant uppercase tracking-wider">Shift Schedule</label>
+          <input id="formSchedule" required class="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]" placeholder="e.g. 08:00 - 16:00" type="text" value="08:00 - 16:00">
+        </div>
+      </div>
+      <div class="space-y-1">
+        <label class="text-[11px] text-on-surface-variant uppercase tracking-wider">Duty Status</label>
+        <select id="formStatus" class="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 px-3 text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]">
+          <option value="available">Available</option>
+          <option value="busy">Busy</option>
+          <option value="consulting">Consulting</option>
+          <option value="off-duty">Off Duty</option>
+        </select>
+      </div>
+      <div class="flex justify-end gap-sm pt-4 border-t border-white/5">
+        <button type="button" onclick="closeAddModal()" class="px-4 py-2 border border-white/10 rounded-xl text-label-md text-on-surface-variant hover:bg-white/5 transition-all">Cancel</button>
+        <button type="submit" class="bg-gradient-to-r from-primary-container to-[#14d1ff] text-on-primary font-bold px-6 py-2 rounded-xl text-label-md hover:brightness-110 active:scale-[0.98] transition-all active-glow flex items-center gap-1">
+          Admit Physician <span class="material-symbols-outlined text-[16px]">verified_user</span>
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Detail Dialog -->
+  <dialog id="detailDialog" class="m-auto backdrop:bg-[#0b1326]/60 backdrop:backdrop-blur-sm glass-card p-lg rounded-2xl w-full max-w-md bg-[#0b1326]/95 border border-white/10 text-[#dae2fd] shadow-2xl backdrop-blur-xl">
+    <div class="absolute top-0 left-0 w-full h-1 bg-[#00f0ff]"></div>
+    <div id="detailContent"></div>
+  </dialog>
+
+  <!-- Global Toasts Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3"></div>
+
+  <script>
+    let doctors = [];
+
+    const addDialog = document.getElementById('addDialog');
+    const detailDialog = document.getElementById('detailDialog');
+
+    function openAddModal() { addDialog.showModal(); }
+    function closeAddModal() { addDialog.close(); }
+    function closeDetailModal() { detailDialog.close(); }
+
+    addDialog.addEventListener('click', (e) => {
+      const rect = addDialog.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) addDialog.close();
+    });
+
+    detailDialog.addEventListener('click', (e) => {
+      const rect = detailDialog.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) detailDialog.close();
+    });
+
+    // Fetch and Load Doctors
+    async function loadDoctors() {
+      try {
+        const res = await fetch("http://localhost:5001/api/doctors");
+        if (res.ok) {
+          doctors = await res.json();
+          renderDoctors();
+          updateStats();
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Error", "Could not load doctor registry.", "error");
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('statTotalDoctors').textContent = (156 + doctors.length).toLocaleString();
+      const avail = doctors.filter(d => d.status.toLowerCase() === 'available').length + 2;
+      const busy = doctors.filter(d => d.status.toLowerCase() === 'busy').length + 1;
+      const consult = doctors.filter(d => d.status.toLowerCase() === 'consulting').length + 1;
+
+      document.getElementById('statAvailableDoctors').textContent = avail;
+      document.getElementById('statBusyDoctors').textContent = busy;
+      document.getElementById('statConsultingDoctors').textContent = consult;
+    }
+
+    function renderDoctors() {
+      const body = document.getElementById('doctorTableBody');
+      body.innerHTML = '';
+      
+      const searchVal = document.getElementById('doctorSearchInput').value.toLowerCase();
+      const deptVal = document.getElementById('deptFilter').value.toLowerCase();
+      const statusVal = document.getElementById('statusFilter').value.toLowerCase();
+
+      doctors.forEach(d => {
+        const matchesSearch = d.name.toLowerCase().includes(searchVal) || d.email.toLowerCase().includes(searchVal) || d.dept.toLowerCase().includes(searchVal);
+        const matchesDept = deptVal === 'all' || d.dept.toLowerCase() === deptVal;
+        const matchesStatus = statusVal === 'all' || d.status.toLowerCase() === statusVal;
+
+        if (!matchesSearch || !matchesDept || !matchesStatus) return;
+
+        let badgeClass = "bg-white/5 text-on-surface-variant border border-white/10";
+        if (d.status.toLowerCase() === 'available') badgeClass = "bg-tertiary-container/10 text-tertiary-container border border-tertiary-container/20";
+        else if (d.status.toLowerCase() === 'busy') badgeClass = "bg-error/10 text-error border border-error/20";
+        else if (d.status.toLowerCase() === 'consulting') badgeClass = "bg-secondary-container/10 text-secondary-container border border-secondary-container/20";
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-white/5 transition-colors group doctor-row";
+        tr.innerHTML = `
+          <td class="py-3.5">
+            <div class="flex items-center gap-3">
+              <img class="w-8 h-8 rounded-full border border-white/10 object-cover" src="${d.img || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCxE0Kc-a84miM3cx60p-is_bmHfiuDni2VYTT13G7qH4EHo7VInDBPQf4KvsZEdoY4BjpC5ilIM2izkMM9QWnv942pBrRN6W5DJSpzZWc1zarDgsffmVC1fjLswQ3Bc-exrEkeyXHSvEfAXOGgX1IUEjt_u_EqScu7e0V96-bf-KRzX4MBcMGdyC-zZ8A7lhCflEHR03TY2y6IIxnexbbIGi_iBRgeYSOjnTIqtkcnQ8u3c9X_FAEKptPJrNL3bAtuyqgIJWLEi-g'}" alt="${d.name}">
+              <div>
+                <span class="font-bold text-on-surface block">${d.name}</span>
+                <span class="text-[10px] text-on-surface-variant">${d.gender}, ${d.age} yrs</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-3.5 text-on-surface">${d.dept}</td>
+          <td class="py-3.5 text-on-surface-variant font-mono text-[10px]">${d.email}</td>
+          <td class="py-3.5 text-on-surface-variant">${d.schedule}</td>
+          <td class="py-3.5">
+            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${badgeClass}">${d.status}</span>
+          </td>
+          <td class="py-3.5 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <button onclick="viewDoctor('${d._id || d.id}')" class="p-1.5 rounded-lg bg-surface-container border border-white/5 hover:bg-primary-container/10 text-on-surface-variant hover:text-primary-container transition-all">
+                <span class="material-symbols-outlined text-[18px]">visibility</span>
+              </button>
+              <button onclick="deleteDoctor('${d._id || d.id}', '${d.name}')" class="p-1.5 rounded-lg bg-surface-container border border-white/5 hover:bg-error/10 text-on-surface-variant hover:text-error transition-all">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function filterDoctors() {
+      renderDoctors();
+    }
+
+    // Input listener to filter
+    document.getElementById('doctorSearchInput').addEventListener('input', renderDoctors);
+
+    // View doctor detail
+    function viewDoctor(id) {
+      const d = doctors.find(doc => (doc._id || doc.id) === id);
+      if (!d) return;
+
+      let badgeClass = "bg-white/5 text-on-surface-variant border border-white/10";
+      if (d.status.toLowerCase() === 'available') badgeClass = "bg-tertiary-container/10 text-tertiary-container border border-tertiary-container/20";
+      else if (d.status.toLowerCase() === 'busy') badgeClass = "bg-error/10 text-error border border-error/20";
+      else if (d.status.toLowerCase() === 'consulting') badgeClass = "bg-secondary-container/10 text-secondary-container border border-secondary-container/20";
+
+      document.getElementById('detailContent').innerHTML = `
+        <div class="flex justify-between items-start mb-6">
+          <div class="flex items-center gap-3">
+            <img class="w-12 h-12 rounded-full border border-white/10 object-cover" src="${d.img || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCxE0Kc-a84miM3cx60p-is_bmHfiuDni2VYTT13G7qH4EHo7VInDBPQf4KvsZEdoY4BjpC5ilIM2izkMM9QWnv942pBrRN6W5DJSpzZWc1zarDgsffmVC1fjLswQ3Bc-exrEkeyXHSvEfAXOGgX1IUEjt_u_EqScu7e0V96-bf-KRzX4MBcMGdyC-zZ8A7lhCflEHR03TY2y6IIxnexbbIGi_iBRgeYSOjnTIqtkcnQ8u3c9X_FAEKptPJrNL3bAtuyqgIJWLEi-g'}" alt="${d.name}">
+            <div>
+              <h3 class="text-sm font-bold text-primary">${d.name}</h3>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">${d.dept} Department</p>
+            </div>
+          </div>
+          <button onclick="closeDetailModal()" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/5 text-on-surface-variant hover:text-error transition-all">
+            <span class="material-symbols-outlined !text-sm">close</span>
+          </button>
+        </div>
+        <div class="space-y-4 text-xs">
+          <div class="grid grid-cols-2 gap-4 border-t border-b border-white/5 py-4">
+            <div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Gender</p>
+              <p class="font-semibold mt-0.5 text-on-surface">${d.gender}</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Age</p>
+              <p class="font-semibold mt-0.5 text-on-surface">${d.age} years old</p>
+            </div>
+          </div>
+          <div>
+            <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Email Address</p>
+            <p class="font-semibold mt-0.5 text-on-surface font-mono flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-primary">mail</span> ${d.email}
+            </p>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Roster Schedule</p>
+              <p class="font-semibold mt-0.5 text-on-surface">${d.schedule}</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Status</p>
+              <span class="inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${badgeClass}">${d.status}</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end pt-4 border-t border-white/5 mt-6">
+          <button onclick="closeDetailModal()" class="bg-surface-container border border-white/5 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-surface-variant/40 transition-colors">Close Profile</button>
+        </div>
+      `;
+      detailDialog.showModal();
+    }
+
+    // Delete doctor
+    async function deleteDoctor(id, name) {
+      if (!confirm(`Are you sure you want to remove physician credentials for ${name}?`)) return;
+      try {
+        const res = await fetch(`http://localhost:5001/api/doctors/${id}`, {
+          method: "DELETE"
+        });
+        if (res.ok) {
+          showToast("Physician Removed", `${name}'s profile has been archived.`, "error");
+          loadDoctors();
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Error", "Failed to archive physician credentials.", "error");
+      }
+    }
+
+    // Add Doctor Submit
+    async function handleAddSubmit(e) {
+      e.preventDefault();
+      
+      const avatars = [
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuCxE0Kc-a84miM3cx60p-is_bmHfiuDni2VYTT13G7qH4EHo7VInDBPQf4KvsZEdoY4BjpC5ilIM2izkMM9QWnv942pBrRN6W5DJSpzZWc1zarDgsffmVC1fjLswQ3Bc-exrEkeyXHSvEfAXOGgX1IUEjt_u_EqScu7e0V96-bf-KRzX4MBcMGdyC-zZ8A7lhCflEHR03TY2y6IIxnexbbIGi_iBRgeYSOjnTIqtkcnQ8u3c9X_FAEKptPJrNL3bAtuyqgIJWLEi-g",
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o"
+      ];
+      const img = avatars[Math.floor(Math.random() * avatars.length)];
+      
+      const payload = {
+        name: document.getElementById('formName').value,
+        gender: document.getElementById('formGender').value,
+        age: parseInt(document.getElementById('formAge').value),
+        email: document.getElementById('formEmail').value,
+        dept: document.getElementById('formDept').value,
+        schedule: document.getElementById('formSchedule').value,
+        status: document.getElementById('formStatus').value,
+        img: img
+      };
+
+      try {
+        const res = await fetch("http://localhost:5001/api/doctors", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          showToast("Physician Registered", `Successfully logged credentials for ${payload.name}.`);
+          loadDoctors();
+          closeAddModal();
+          document.getElementById('addForm').reset();
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Error", "Could not complete registration.", "error");
+      }
+    }
+
+    // Toast manager
+    function showToast(title, message, type = "success") {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const borderColor = type === 'success' ? 'rgba(0, 240, 255, 0.3)' : 'rgba(255, 180, 171, 0.3)';
+      const icon = type === 'success' ? 'check_circle' : 'warning';
+      const iconColor = type === 'success' ? 'text-primary-container' : 'text-error';
+      
+      toast.className = `glass-card p-4 rounded-xl flex items-start gap-3 w-80 shadow-2xl transition-all duration-300 transform translate-y-2 opacity-0`;
+      toast.style.border = `1px solid ${borderColor}`;
+      
+      toast.innerHTML = `
+        <span class="material-symbols-outlined ${iconColor} mt-0.5">${icon}</span>
+        <div class="flex-1">
+          <p class="text-xs font-bold text-on-surface">${title}</p>
+          <p class="text-[10px] text-on-surface-variant mt-0.5">${message}</p>
+        </div>
+      `;
+      
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.className = `glass-card p-4 rounded-xl flex items-start gap-3 w-80 shadow-2xl transition-all duration-300 transform translate-y-0 opacity-100`;
+      }, 50);
+      
+      setTimeout(() => {
+        toast.className = `glass-card p-4 rounded-xl flex items-start gap-3 w-80 shadow-2xl transition-all duration-300 transform translate-y-2 opacity-0`;
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 4000);
+    }
+
+    // Load initial
+    loadDoctors();
+  </script>
+
+
+  
+
+
+  <!-- Dynamic Date, Search & Notification Script -->
+  <script>
+    (function() {
+      // 1. Dynamic date updates
+      const today = new Date();
+      const displayDate = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const inputDate = today.toISOString().split('T')[0];
+
+      document.querySelectorAll('input[type="date"]').forEach(input => {
+        input.value = inputDate;
+      });
+
+      document.querySelectorAll('.header-date-text').forEach(el => {
+        el.textContent = displayDate;
+      });
+
+      // 2. Close dialog when clicking outside (backdrop click)
+      document.querySelectorAll('dialog').forEach(dialog => {
+        dialog.addEventListener('click', (e) => {
+          const rect = dialog.getBoundingClientRect();
+          const isInDialog = (
+            e.clientX >= rect.left &&
+            e.clientX <= rect.right &&
+            e.clientY >= rect.top &&
+            e.clientY <= rect.bottom
+          );
+          if (!isInDialog) {
+            dialog.close();
+          }
+        });
+      });
+
+      // 3. Notification Dropdown Integration & Live Polling
+      const notifBtn = Array.from(document.querySelectorAll('header button')).find(btn => {
+        const span = btn.querySelector('.material-symbols-outlined');
+        return span && span.textContent.trim() === 'notifications';
+      });
+
+      if (notifBtn) {
+        // Create dropdown container if not exists
+        let dropdown = notifBtn.querySelector('.notifications-dropdown-menu');
+        if (!dropdown) {
+          dropdown = document.createElement('div');
+          dropdown.className = 'notifications-dropdown-menu absolute right-0 mt-3 w-80 glass-card bg-[#0b1326]/95 border border-white/10 rounded-2xl shadow-2xl p-4 z-50 text-xs text-[#dae2fd] hidden';
+          dropdown.style.top = '100%';
+          dropdown.style.cursor = 'default';
+          dropdown.style.textAlign = 'left';
+          dropdown.style.userSelect = 'text';
+
+          // Stop clicks inside dropdown from propagating
+          dropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+          });
+          notifBtn.appendChild(dropdown);
+        }
+
+        let notifications = [];
+
+        async function fetchNotifications() {
+          try {
+            const res = await fetch("http://localhost:5001/api/notifications");
+            if (res.ok) {
+              notifications = await res.json();
+              renderNotifications();
+            }
+          } catch (err) {
+            console.error("Failed to fetch notifications", err);
+          }
+        }
+
+        async function markAllAsRead() {
+          try {
+            const res = await fetch("http://localhost:5001/api/notifications/read-all", {
+              method: "PUT"
+            });
+            if (res.ok) {
+              fetchNotifications();
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }
+
+        async function markAsRead(id) {
+          try {
+            const res = await fetch(`http://localhost:5001/api/notifications/${id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ read: true })
+            });
+            if (res.ok) {
+              fetchNotifications();
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }
+
+        function renderNotifications() {
+          const unreadCount = notifications.filter(n => !n.read).length;
+          const badge = notifBtn.querySelector('.bg-error') || notifBtn.querySelector('span[class*="bg-error"]');
+          if (badge) {
+            if (unreadCount > 0) {
+              badge.style.display = 'flex';
+              badge.className = 'absolute bg-error text-white font-extrabold text-[8px] flex items-center justify-center rounded-full animate-pulse border border-[#0b1326]';
+              badge.style.width = '16px';
+              badge.style.height = '16px';
+              badge.style.top = '2px';
+              badge.style.right = '2px';
+              badge.textContent = unreadCount;
+            } else {
+              badge.style.display = 'none';
+            }
+          }
+
+          let html = `
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/5 font-bold" style="user-select: none;">
+              <span class="text-primary font-bold">Clinical Alerts</span>
+              \${unreadCount > 0 ? `<button class="mark-all-read text-[10px] text-primary-container hover:underline cursor-pointer font-medium" style="background:none; border:none; padding:0;">Mark all read</button>` : ''}
+            </div>
+            <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar select-text">
+          `;
+
+          if (notifications.length === 0) {
+            html += `<div class="text-center py-6 text-on-surface-variant opacity-60">No new alerts</div>`;
+          } else {
+            notifications.forEach(n => {
+              const id = n._id || n.id;
+              html += `
+                <div class="p-2.5 rounded-xl border transition-all cursor-pointer notif-item \${
+                  n.read 
+                    ? "bg-white/5 border-white/5 opacity-60" 
+                    : "bg-primary-container/5 border-primary-container/20 hover:bg-primary-container/10"
+                }" data-id="\${id}" style="margin-bottom: 8px;">
+                  <div class="flex justify-between items-start gap-2">
+                    <p class="font-medium \${n.read ? "text-on-surface-variant" : "text-primary"}" style="margin: 0; line-height: 1.3;">
+                      \${n.text}
+                    </p>
+                    <span class="text-[8px] text-on-surface-variant font-mono shrink-0" style="white-space: nowrap;">\${n.time}</span>
+                  </div>
+                  <div class="mt-1 flex items-center justify-between">
+                    <span class="text-[8px] uppercase tracking-wider font-bold \${
+                      n.type === 'urgent' ? 'text-error' : n.type === 'success' ? 'text-tertiary-container' : 'text-primary-container'
+                    }">
+                      \${n.type}
+                    </span>
+                    \${!n.read ? `<span class="w-1.5 h-1.5 bg-[#00f0ff] rounded-full"></span>` : ''}
+                  </div>
+                </div>
+              `;
+            });
+          }
+
+          html += `</div>`;
+          dropdown.innerHTML = html;
+
+          // Event Listeners for inside dropdown
+          const markAllBtn = dropdown.querySelector('.mark-all-read');
+          if (markAllBtn) {
+            markAllBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              markAllAsRead();
+            });
+          }
+
+          dropdown.querySelectorAll('.notif-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const id = item.getAttribute('data-id');
+              markAsRead(id);
+            });
+          });
+        }
+
+        fetchNotifications();
+        setInterval(fetchNotifications, 4000);
+
+        notifBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdown.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', () => {
+          dropdown.classList.add('hidden');
+        });
+      }
+
+      // 4. Live Search Synchronizer & Filter
+      const globalSearchInput = document.querySelector('header input[placeholder*="Search"]');
+      if (globalSearchInput) {
+        const pageSearchInputs = [
+          'pharmacySearchInput',
+          'otSearchInput',
+          'bedSearchInput',
+          'reportsSearchInput',
+          'appointmentSearch',
+          'billingSearchInput',
+          'revenueSearchInput',
+          'doctorSearchInput',
+          'patientsSearchInput',
+          'staffSearchInput',
+          'pantrySearchInput'
+        ];
+
+        const triggerSearch = (query) => {
+          query = query.toLowerCase().trim();
+
+          // Sync other page search inputs
+          pageSearchInputs.forEach(id => {
+            const inp = document.getElementById(id);
+            if (inp && inp !== globalSearchInput && inp.value !== query) {
+              inp.value = query;
+              inp.dispatchEvent(new Event('input'));
+            }
+          });
+
+          // Filter tables
+          document.querySelectorAll('main table').forEach(table => {
+            table.querySelectorAll('tbody tr').forEach(row => {
+              if (row.querySelector('th')) return;
+              const text = row.innerText.toLowerCase();
+              row.style.display = text.includes(query) ? '' : 'none';
+            });
+          });
+
+          // Fallback bed availability grid filtering
+          if (window.location.pathname.includes('bed_availability.html')) {
+            document.querySelectorAll('.grid > .glass-card').forEach(card => {
+              const text = card.innerText.toLowerCase();
+              if (card.querySelector('h3') && (card.innerText.includes('GW-') || card.innerText.includes('ICU-') || card.innerText.includes('ER-') || card.innerText.includes('PED-'))) {
+                card.style.display = text.includes(query) ? '' : 'none';
+              }
+            });
+          }
+        };
+
+        globalSearchInput.addEventListener('input', (e) => {
+          triggerSearch(e.target.value);
+        });
+
+        pageSearchInputs.forEach(id => {
+          const inp = document.getElementById(id);
+          if (inp) {
+            inp.addEventListener('input', (e) => {
+              if (globalSearchInput.value !== e.target.value) {
+                globalSearchInput.value = e.target.value;
+              }
+            });
+          }
+        });
+      }
+    })();
+  </script>
+
+</body>
+</html>

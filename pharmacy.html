@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Health Copilot | Pharmacy Inventory</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary": "#00363a",
+            "on-tertiary-fixed-variant": "#005047",
+            "inverse-on-surface": "#283044",
+            "on-secondary-container": "#00566b",
+            "on-error": "#690005",
+            "on-secondary-fixed-variant": "#004e60",
+            "secondary-fixed-dim": "#4cd6ff",
+            "on-surface": "#dae2fd",
+            "tertiary": "#d1fff5",
+            "surface-dim": "#0b1326",
+            "on-primary-fixed": "#002022",
+            "inverse-surface": "#dae2fd",
+            "surface-bright": "#31394d",
+            "surface-container-low": "#131b2e",
+            "on-secondary-fixed": "#001f28",
+            "surface": "#0b1326",
+            "on-tertiary-fixed": "#00201c",
+            "surface-container-high": "#222a3d",
+            "primary-fixed": "#7df4ff",
+            "outline": "#849495",
+            "on-error-container": "#ffdad6",
+            "tertiary-fixed": "#62fae3",
+            "surface-container-lowest": "#060e20",
+            "on-secondary": "#003543",
+            "surface-variant": "#2d3449",
+            "on-primary-container": "#006970",
+            "surface-container-highest": "#2d3449",
+            "error": "#ffb4ab",
+            "background": "#0b1326",
+            "secondary-container": "#14d1ff",
+            "outline-variant": "#3b494b",
+            "inverse-primary": "#006970",
+            "tertiary-container": "#56f0da",
+            "primary-fixed-dim": "#00dbe9",
+            "secondary-fixed": "#b7eaff",
+            "on-tertiary": "#003731",
+            "primary-container": "#00f0ff",
+            "primary": "#dbfcff",
+            "on-surface-variant": "#b9cacb",
+            "on-tertiary-container": "#006b5f",
+            "on-primary-fixed-variant": "#004f54",
+            "surface-container": "#171f33",
+            "secondary": "#a6e6ff",
+            "on-background": "#dae2fd",
+            "surface-tint": "#00dbe9",
+            "error-container": "#93000a",
+            "tertiary-fixed-dim": "#3cddc7"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "sm": "16px",
+            "xs": "8px",
+            "md": "24px",
+            "margin-desktop": "40px",
+            "gutter": "24px",
+            "base": "4px",
+            "xl": "48px",
+            "margin-mobile": "16px",
+            "lg": "32px"
+          },
+          "fontFamily": {
+            "body-sm": ["Inter"],
+            "headline-lg": ["Inter"],
+            "label-md": ["Geist"],
+            "headline-md": ["Inter"],
+            "body-md": ["Inter"],
+            "display-lg": ["Inter"],
+            "headline-lg-mobile": ["Inter"],
+            "body-lg": ["Inter"],
+            "data-mono": ["Geist"]
+          },
+          "fontSize": {
+            "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+            "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+            "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0b1326;
+      color: #dae2fd;
+      overflow-x: hidden;
+    }
+    .glass-card {
+      background: rgba(23, 31, 51, 0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      background: rgba(23, 31, 51, 0.5);
+      transform: translateY(-4px);
+    }
+    .inner-glow {
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    }
+    .active-glow {
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    /* Modal Animation */
+    dialog::backdrop {
+      background: rgba(6, 14, 32, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0;
+      transition: opacity 0.3s ease-out;
+    }
+    dialog[open]::backdrop {
+      opacity: 1;
+    }
+    dialog {
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+      transition: opacity 0.3s ease-out, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    dialog[open] {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  </style>
+</head>
+<body class="font-body-md text-body-md antialiased">
+  <!-- Sidebar Navigation -->
+  <aside class="h-screen w-72 fixed left-0 top-0 bg-surface/60 backdrop-blur-xl border-r border-white/10 shadow-2xl flex flex-col py-md z-50">
+    <div class="px-md mb-xl">
+      <h1 class="font-headline-md text-headline-md font-bold text-primary">Health Copilot</h1>
+      <p class="font-label-md text-label-md text-on-surface-variant opacity-70">Medical Command Center</p>
+    </div>
+    <nav class="flex-1 space-y-1">
+      <!-- Dashboard -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="admin_dashboard.html">
+        <span class="material-symbols-outlined">dashboard</span>
+        <span class="font-label-md text-label-md">Dashboard</span>
+      </a>
+      <!-- Appointments -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="appointments.html">
+        <span class="material-symbols-outlined">calendar_today</span>
+        <span class="font-label-md text-label-md">Appointments</span>
+      </a>
+      <!-- Bed Availability -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="bed_availability.html">
+        <span class="material-symbols-outlined">bed</span>
+        <span class="font-label-md text-label-md">Bed Availability</span>
+      </a>
+      <!-- OT -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="ot.html">
+        <span class="material-symbols-outlined">surgical</span>
+        <span class="font-label-md text-label-md">OT</span>
+      </a>
+      <!-- Doctor -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="doctor.html">
+        <span class="material-symbols-outlined">person_filled</span>
+        <span class="font-label-md text-label-md">Doctor</span>
+      </a>
+      <!-- Patients -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="patients.html">
+        <span class="material-symbols-outlined">groups</span>
+        <span class="font-label-md text-label-md">Patients</span>
+      </a>
+      <!-- Staff -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="staff.html">
+        <span class="material-symbols-outlined">medical_services</span>
+        <span class="font-label-md text-label-md">Staff</span>
+      </a>
+      <!-- Pharmacy (Active) -->
+      <a class="flex items-center gap-3 px-6 py-4 text-tertiary-container border-l-4 border-tertiary-container bg-tertiary-container/10 transition-all duration-150 active:scale-[0.98]" href="pharmacy.html">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medication</span>
+        <span class="font-label-md text-label-md">Pharmacy</span>
+      </a>
+      <!-- Pantry -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="pantry.html">
+        <span class="material-symbols-outlined">restaurant</span>
+        <span class="font-label-md text-label-md">Pantry</span>
+      </a>
+      <!-- Billing -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="billing.html">
+        <span class="material-symbols-outlined">payments</span>
+        <span class="font-label-md text-label-md">Billing</span>
+      </a>
+      <!-- Revenue -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="revenue.html">
+        <span class="material-symbols-outlined">trending_up</span>
+        <span class="font-label-md text-label-md">Revenue</span>
+      </a>
+      <!-- Reports -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="reports.html">
+        <span class="material-symbols-outlined">analytics</span>
+        <span class="font-label-md text-label-md">Reports</span>
+      </a>
+      <!-- Settings -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="#">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="font-label-md text-label-md">Settings</span>
+      </a>
+    </nav>
+    <div class="mt-auto px-md pt-md border-t border-white/5">
+      <div class="flex items-center gap-3 p-3 rounded-xl bg-surface-container-high/40">
+        <img class="w-10 h-10 rounded-full border border-primary/20" alt="Dr. Sarah Jenkins" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o">
+        <div class="overflow-hidden">
+          <p class="font-label-md text-label-md font-bold truncate">Dr. Sarah Jenkins</p>
+          <p class="text-[10px] uppercase tracking-wider text-primary opacity-70">Chief Medical Officer</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Top Navigation -->
+  <header class="fixed top-0 right-0 w-[calc(100%-18rem)] h-20 z-40 bg-surface-container/40 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-margin-desktop shadow-sm">
+    <div class="flex items-center gap-lg">
+      <div class="relative w-96">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-md">search</span>
+        <input id="pharmacySearchInput" class="w-full bg-surface-container-lowest border-none rounded-full py-2 pl-10 pr-4 text-body-sm focus:ring-2 focus:ring-primary-container/50 text-on-surface placeholder-on-surface-variant/50" placeholder="Search medications, categories, or SKUs..." type="text">
+      </div>
+    </div>
+    <div class="flex items-center gap-md">
+      <button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-variant/20 transition-all relative">
+        <span class="material-symbols-outlined">notifications</span>
+        <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+      </button>
+      <button class="w-10 h-10 flex items-center justify-center rounded-full overflow-hidden border border-white/10 hover:bg-surface-variant/20 transition-all">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o" alt="Profile" class="w-full h-full object-cover">
+      </button>
+      <a href="login_selection.html" class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-variant/20 transition-all">
+        <span class="material-symbols-outlined">logout</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content Canvas -->
+  <main class="ml-72 pt-24 px-margin-desktop pb-xl min-h-screen">
+    <!-- Welcome Header -->
+    <section class="mb-lg flex justify-between items-end">
+      <div>
+        <h2 class="font-headline-lg text-headline-lg text-primary">Pharmacy Roster & Inventory</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">Real-time prescription dispensing ledgers and medication inventory audits.</p>
+      </div>
+      <div class="flex gap-sm">
+        <button class="bg-surface-container-high px-4 py-2 rounded-lg text-label-md font-label-md hover:bg-surface-variant/40 transition-colors flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+          <span class="header-date-text">Feb 24, 2024</span>
+        </button>
+        <button onclick="openBookingModal()" class="bg-gradient-to-r from-primary-container to-secondary-container text-on-primary font-bold px-6 py-2 rounded-lg text-label-md hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2 active-glow">
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          Register New Stock
+        </button>
+      </div>
+    </section>
+
+    <!-- Stats Grid -->
+    <section class="grid grid-cols-1 md:grid-cols-5 gap-gutter mb-lg">
+      <!-- Total Medications -->
+      <div class="glass-card p-md rounded-xl inner-glow">
+        <div class="flex justify-between items-start mb-sm">
+          <div class="w-10 h-10 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary-container">
+            <span class="material-symbols-outlined">medication</span>
+          </div>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant">Total Medications</p>
+        <h3 id="statTotalMedications" class="font-headline-md text-headline-md mt-1">1,248</h3>
+      </div>
+      <!-- Low Stock Drugs -->
+      <div class="glass-card p-md rounded-xl inner-glow">
+        <div class="flex justify-between items-start mb-sm">
+          <div class="w-10 h-10 rounded-lg bg-error/20 flex items-center justify-center text-error">
+            <span class="material-symbols-outlined">warning</span>
+          </div>
+          <span class="text-error text-label-md font-bold">Alert</span>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant">Low Stock Items</p>
+        <h3 id="statLowStock" class="font-headline-md text-headline-md mt-1">8</h3>
+      </div>
+      <!-- Pending Prescriptions -->
+      <div class="glass-card p-md rounded-xl inner-glow">
+        <div class="flex justify-between items-start mb-sm">
+          <div class="w-10 h-10 rounded-lg bg-secondary-container/20 flex items-center justify-center text-secondary-container">
+            <span class="material-symbols-outlined">pending_actions</span>
+          </div>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant">Pending Prescriptions</p>
+        <h3 id="statPendingPrescriptions" class="font-headline-md text-headline-md mt-1">15</h3>
+      </div>
+      <!-- Dispatched Today -->
+      <div class="glass-card p-md rounded-xl inner-glow">
+        <div class="flex justify-between items-start mb-sm">
+          <div class="w-10 h-10 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary-container">
+            <span class="material-symbols-outlined">done_all</span>
+          </div>
+          <span class="text-tertiary-container text-label-md font-bold">+12%</span>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant">Dispatched Today</p>
+        <h3 id="statDispatchedToday" class="font-headline-md text-headline-md mt-1">84</h3>
+      </div>
+      <!-- Vault Temp -->
+      <div class="glass-card p-md rounded-xl inner-glow">
+        <div class="flex justify-between items-start mb-sm">
+          <div class="w-10 h-10 rounded-lg bg-tertiary-container/20 flex items-center justify-center text-tertiary-container">
+            <span class="material-symbols-outlined">thermostat</span>
+          </div>
+          <span class="text-tertiary-container text-label-md font-bold">Stable</span>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant">Cold Vault Temp</p>
+        <h3 class="font-headline-md text-headline-md mt-1">4.2 °C</h3>
+      </div>
+    </section>
+
+    <!-- Workspace Grid -->
+    <section class="grid grid-cols-12 gap-gutter mb-lg">
+      <!-- Inventory Ledger -->
+      <div class="col-span-12 lg:col-span-9 glass-card rounded-2xl p-lg inner-glow">
+        <div class="flex justify-between items-center mb-lg">
+          <h4 class="font-headline-md text-headline-md">Medication Inventory</h4>
+          <div class="flex items-center gap-xs">
+            <span class="font-data-mono text-[11px] text-on-surface-variant">Filter Category:</span>
+            <select id="categoryFilter" onchange="filterInventory()" class="bg-surface-container border-none text-body-sm rounded-lg py-1.5 px-3 focus:ring-1 focus:ring-primary text-on-surface">
+              <option value="all">All Categories</option>
+              <option value="analgesic">Analgesic</option>
+              <option value="antibiotic">Antibiotic</option>
+              <option value="cardiovascular">Cardiovascular</option>
+              <option value="respiratory">Respiratory</option>
+            </select>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-on-surface-variant font-label-md uppercase tracking-wider text-[11px] border-b border-white/10">
+                <th class="pb-4 font-normal">Drug Name</th>
+                <th class="pb-4 font-normal">SKU</th>
+                <th class="pb-4 font-normal">Category</th>
+                <th class="pb-4 font-normal">Dosage</th>
+                <th class="pb-4 font-normal">Stock Level</th>
+                <th class="pb-4 font-normal">Status</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTableBody" class="text-body-sm font-body-sm divide-y divide-white/5">
+              <tr class="hover:bg-white/5 transition-colors group inventory-row" data-category="analgesic">
+                <td class="py-4 font-bold text-on-surface">Acetaminophen (Tylenol)</td>
+                <td class="py-4 font-data-mono text-primary-container">SKU-29381</td>
+                <td class="py-4">Analgesic</td>
+                <td class="py-4">500mg</td>
+                <td class="py-4 font-bold quantity-cell">320 units</td>
+                <td class="py-4">
+                  <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-tertiary-container/10 text-tertiary-container border border-tertiary-container/20 uppercase tracking-wider status-badge">In Stock</span>
+                </td>
+              </tr>
+              <tr class="hover:bg-white/5 transition-colors group inventory-row" data-category="antibiotic">
+                <td class="py-4 font-bold text-on-surface">Amoxicillin</td>
+                <td class="py-4 font-data-mono text-primary-container">SKU-88291</td>
+                <td class="py-4">Antibiotic</td>
+                <td class="py-4">250mg</td>
+                <td class="py-4 font-bold quantity-cell">45 units</td>
+                <td class="py-4">
+                  <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-error/10 text-error border border-error/20 uppercase tracking-wider status-badge">Low Stock</span>
+                </td>
+              </tr>
+              <tr class="hover:bg-white/5 transition-colors group inventory-row" data-category="cardiovascular">
+                <td class="py-4 font-bold text-on-surface">Atorvastatin (Lipitor)</td>
+                <td class="py-4 font-data-mono text-primary-container">SKU-44321</td>
+                <td class="py-4">Cardiovascular</td>
+                <td class="py-4">20mg</td>
+                <td class="py-4 font-bold quantity-cell">180 units</td>
+                <td class="py-4">
+                  <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-tertiary-container/10 text-tertiary-container border border-tertiary-container/20 uppercase tracking-wider status-badge">In Stock</span>
+                </td>
+              </tr>
+              <tr class="hover:bg-white/5 transition-colors group inventory-row" data-category="respiratory">
+                <td class="py-4 font-bold text-on-surface">Albuterol Inhaler</td>
+                <td class="py-4 font-data-mono text-primary-container">SKU-10928</td>
+                <td class="py-4">Respiratory</td>
+                <td class="py-4">90mcg</td>
+                <td class="py-4 font-bold quantity-cell">0 units</td>
+                <td class="py-4">
+                  <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-white/5 text-on-surface-variant border border-white/10 uppercase tracking-wider status-badge">Out of Stock</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pending Prescriptions Dispensing Roster -->
+      <div class="col-span-12 lg:col-span-3 glass-card rounded-2xl p-lg inner-glow flex flex-col h-full">
+        <h4 class="font-headline-md text-headline-md mb-xs">Prescription Feed</h4>
+        <p class="font-body-sm text-body-sm text-on-surface-variant mb-lg">Dispense queues</p>
+        <div id="prescriptionQueue" class="space-y-4 flex-1">
+          <!-- Prescription item 1 -->
+          <div class="p-3 rounded-xl bg-surface-container-high/20 border border-white/5 flex flex-col gap-2 rx-card" data-drug="Acetaminophen (Tylenol)" data-qty="10">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-on-surface">Rx-9921 • Arthur Morgan</span>
+              <span class="text-[9px] uppercase font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">Pending</span>
+            </div>
+            <div class="text-[11px] text-on-surface-variant">
+              <span class="font-semibold text-primary-container">Drug:</span> Acetaminophen, 500mg (Qty: 10)
+            </div>
+            <button onclick="dispenseRx(this)" class="w-full mt-1 bg-gradient-to-r from-primary-container to-secondary-container text-on-primary font-bold py-1.5 rounded-lg text-label-md hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">outbox</span> Dispense
+            </button>
+          </div>
+          <!-- Prescription item 2 -->
+          <div class="p-3 rounded-xl bg-surface-container-high/20 border border-white/5 flex flex-col gap-2 rx-card" data-drug="Amoxicillin" data-qty="15">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-on-surface">Rx-9922 • Elena Fisher</span>
+              <span class="text-[9px] uppercase font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">Pending</span>
+            </div>
+            <div class="text-[11px] text-on-surface-variant">
+              <span class="font-semibold text-primary-container">Drug:</span> Amoxicillin, 250mg (Qty: 15)
+            </div>
+            <button onclick="dispenseRx(this)" class="w-full mt-1 bg-gradient-to-r from-primary-container to-secondary-container text-on-primary font-bold py-1.5 rounded-lg text-label-md hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">outbox</span> Dispense
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Register New Stock Modal Dialog -->
+  <dialog id="bookingDialog" class="m-auto backdrop:bg-[#0b1326]/60 backdrop:backdrop-blur-sm glass-card p-lg rounded-2xl w-full max-w-lg bg-[#0b1326]/95 border border-white/10 text-[#dae2fd] shadow-2xl backdrop-blur-xl">
+    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f0ff] to-transparent"></div>
+    <div class="flex justify-between items-center mb-md pb-xs border-b border-white/5">
+      <div>
+        <h3 class="font-headline-md text-headline-md text-primary">Register New Medication</h3>
+        <p class="text-[11px] text-on-surface-variant">Add new pharmaceutical inventory entry</p>
+      </div>
+      <button onclick="closeBookingModal()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/5 text-on-surface-variant hover:text-error transition-all">
+        <span class="material-symbols-outlined !text-xl">close</span>
+      </button>
+    </div>
+
+    <form id="bookingForm" onsubmit="handleBookingSubmit(event)" class="space-y-4">
+      <div class="space-y-1">
+        <label class="text-[11px] text-on-surface-variant uppercase tracking-wider">Medication Name</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">pill</span>
+          <input id="formDrugName" required class="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]" placeholder="e.g. Ibuprofen" type="text">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-sm">
+        <div class="space-y-1">
+          <label class="text-[11px] text-on-surface-variant uppercase tracking-wider">Category</label>
+          <select id="formCategory" class="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 px-3 text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]">
+            <option value="Analgesic">Analgesic</option>
+            <option value="Antibiotic">Antibiotic</option>
+            <option value="Cardiovascular">Cardiovascular</option>
+            <option value="Respiratory">Respiratory</option>
+          </select>
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-on-surface-variant uppercase tracking-wider">Dosage Format</label>
+          <input id="formDosage" required class="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 px-3 text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]" placeholder="e.g. 500mg" type="text">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-sm">
+        <div class="space-y-1">
+          <label class="text-[11px] text-on-surface-variant uppercase tracking-wider">SKU Code</label>
+          <input id="formSKU" required class="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 px-3 text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]" placeholder="SKU-XXXXX" type="text" value="SKU-55412">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-on-surface-variant uppercase tracking-wider">Initial Stock Quantity</label>
+          <input id="formQuantity" required class="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 px-3 text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]" type="number" min="0" value="100">
+        </div>
+      </div>
+      <div class="flex justify-end gap-sm pt-4 border-t border-white/5">
+        <button type="button" onclick="closeBookingModal()" class="px-4 py-2 border border-white/10 rounded-xl text-label-md text-on-surface-variant hover:bg-white/5 transition-all">Cancel</button>
+        <button type="submit" class="bg-gradient-to-r from-primary-container to-[#14d1ff] text-on-primary font-bold px-6 py-2 rounded-xl text-label-md hover:brightness-110 active:scale-[0.98] transition-all active-glow flex items-center gap-1">
+          Confirm Entry <span class="material-symbols-outlined text-[16px]">verified_user</span>
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Global Toasts Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3"></div>
+
+  <script>
+    // Search filter logic
+    const searchInput = document.getElementById('pharmacySearchInput');
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      document.querySelectorAll('.inventory-row').forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+      });
+    });
+
+    const bookingDialog = document.getElementById('bookingDialog');
+    function openBookingModal() { bookingDialog.showModal(); }
+    function closeBookingModal() { bookingDialog.close(); }
+
+    bookingDialog.addEventListener('click', (e) => {
+      const dialogDimensions = bookingDialog.getBoundingClientRect();
+      if (
+        e.clientX < dialogDimensions.left ||
+        e.clientX > dialogDimensions.right ||
+        e.clientY < dialogDimensions.top ||
+        e.clientY > dialogDimensions.bottom
+      ) {
+        bookingDialog.close();
+      }
+    });
+
+    // Category filter logic
+    function filterInventory() {
+      const filter = document.getElementById('categoryFilter').value.toLowerCase();
+      document.querySelectorAll('.inventory-row').forEach(row => {
+        const cat = row.getAttribute('data-category').toLowerCase();
+        if (filter === 'all' || cat === filter) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    // Dispense Prescription
+    function dispenseRx(button) {
+      const card = button.closest('.rx-card');
+      const drug = card.getAttribute('data-drug');
+      const qty = parseInt(card.getAttribute('data-qty'));
+      
+      // Update inventory table if matching row is found
+      let updated = false;
+      document.querySelectorAll('.inventory-row').forEach(row => {
+        const drugName = row.cells[0].textContent;
+        if (drugName.toLowerCase().includes(drug.toLowerCase())) {
+          const qtyCell = row.querySelector('.quantity-cell');
+          const statusBadge = row.querySelector('.status-badge');
+          let currentQty = parseInt(qtyCell.textContent);
+          let newQty = Math.max(0, currentQty - qty);
+          qtyCell.textContent = `${newQty} units`;
+          
+          if (newQty === 0) {
+            statusBadge.className = "px-3 py-1 rounded-full text-[10px] font-bold bg-white/5 text-on-surface-variant border border-white/10 uppercase tracking-wider status-badge";
+            statusBadge.textContent = "Out of Stock";
+          } else if (newQty < 50) {
+            statusBadge.className = "px-3 py-1 rounded-full text-[10px] font-bold bg-error/10 text-error border border-error/20 uppercase tracking-wider status-badge";
+            statusBadge.textContent = "Low Stock";
+          }
+          updated = true;
+        }
+      });
+      
+      // Animate out prescription card
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(-10px)';
+      card.style.transition = 'all 0.3s ease-out';
+      
+      setTimeout(() => {
+        card.remove();
+        
+        // Update stats
+        const pending = document.getElementById('statPendingPrescriptions');
+        pending.textContent = Math.max(0, parseInt(pending.textContent) - 1);
+        
+        const dispatched = document.getElementById('statDispatchedToday');
+        dispatched.textContent = parseInt(dispatched.textContent) + 1;
+        
+        showToast("Prescription Dispensed", `Dispensed ${qty} units of ${drug} successfully.`);
+      }, 300);
+    }
+
+    // Handle stock submission
+    function handleBookingSubmit(event) {
+      event.preventDefault();
+      
+      const name = document.getElementById('formDrugName').value;
+      const category = document.getElementById('formCategory').value;
+      const dosage = document.getElementById('formDosage').value;
+      const sku = document.getElementById('formSKU').value;
+      const quantity = parseInt(document.getElementById('formQuantity').value);
+
+      const tableBody = document.getElementById('inventoryTableBody');
+      const tr = document.createElement('tr');
+      tr.className = "hover:bg-white/5 transition-colors group inventory-row";
+      tr.setAttribute('data-category', category.toLowerCase());
+      tr.style.opacity = '0';
+      tr.style.transform = 'translateY(10px)';
+      tr.style.transition = 'all 0.3s ease-out';
+      
+      let badgeClass = "bg-tertiary-container/10 text-tertiary-container border border-tertiary-container/20";
+      let statusText = "In Stock";
+      if (quantity === 0) {
+        badgeClass = "bg-white/5 text-on-surface-variant border border-white/10";
+        statusText = "Out of Stock";
+      } else if (quantity < 50) {
+        badgeClass = "bg-error/10 text-error border border-error/20";
+        statusText = "Low Stock";
+      }
+
+      tr.innerHTML = `
+        <td class="py-4 font-bold text-on-surface">${name}</td>
+        <td class="py-4 font-data-mono text-primary-container">${sku}</td>
+        <td class="py-4">${category}</td>
+        <td class="py-4">${dosage}</td>
+        <td class="py-4 font-bold quantity-cell">${quantity} units</td>
+        <td class="py-4">
+          <span class="px-3 py-1 rounded-full text-[10px] font-bold ${badgeClass} uppercase tracking-wider status-badge">${statusText}</span>
+        </td>
+      `;
+
+      tableBody.prepend(tr);
+
+      setTimeout(() => {
+        tr.style.opacity = '1';
+        tr.style.transform = 'translateY(0)';
+      }, 50);
+
+      // Update total stats
+      const total = document.getElementById('statTotalMedications');
+      total.textContent = parseInt(total.textContent.replace(/,/g, '')) + 1;
+      
+      if (quantity < 50 && quantity > 0) {
+        const lowStock = document.getElementById('statLowStock');
+        lowStock.textContent = parseInt(lowStock.textContent) + 1;
+      }
+
+      closeBookingModal();
+      showToast("Medication Registered", `Successfully registered ${quantity} units of ${name}.`);
+      document.getElementById('bookingForm').reset();
+    }
+
+    // Toast manager
+    function showToast(title, message, type = "success") {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const borderColor = type === 'success' ? 'rgba(0, 240, 255, 0.3)' : 'rgba(255, 180, 171, 0.3)';
+      const icon = type === 'success' ? 'check_circle' : 'warning';
+      const iconColor = type === 'success' ? 'text-primary-container' : 'text-error';
+      
+      toast.className = `glass-card p-4 rounded-xl flex items-start gap-3 w-80 shadow-2xl transition-all duration-300 transform translate-y-2 opacity-0`;
+      toast.style.border = `1px solid ${borderColor}`;
+      
+      toast.innerHTML = `
+        <span class="material-symbols-outlined ${iconColor} mt-0.5">${icon}</span>
+        <div class="flex-1">
+          <p class="text-xs font-bold text-on-surface">${title}</p>
+          <p class="text-[10px] text-on-surface-variant mt-0.5">${message}</p>
+        </div>
+      `;
+      
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.className = `glass-card p-4 rounded-xl flex items-start gap-3 w-80 shadow-2xl transition-all duration-300 transform translate-y-0 opacity-100`;
+      }, 50);
+      
+      setTimeout(() => {
+        toast.className = `glass-card p-4 rounded-xl flex items-start gap-3 w-80 shadow-2xl transition-all duration-300 transform translate-y-2 opacity-0`;
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 4000);
+    }
+  </script>
+
+  
+  <script>
+    (function() {
+      const today = new Date();
+      const displayDate = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const inputDate = today.toISOString().split('T')[0];
+
+      // Update date input fields
+      document.querySelectorAll('input[type="date"]').forEach(input => {
+        input.value = inputDate;
+      });
+
+      // Update header date displays
+      document.querySelectorAll('.header-date-text').forEach(el => {
+        el.textContent = displayDate;
+      });
+    })();
+  </script>
+
+
+  
+  <script>
+    (function() {
+      const today = new Date();
+      const displayDate = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const inputDate = today.toISOString().split('T')[0];
+
+      // Update date input fields
+      document.querySelectorAll('input[type="date"]').forEach(input => {
+        input.value = inputDate;
+      });
+
+      // Update header date displays
+      document.querySelectorAll('.header-date-text').forEach(el => {
+        el.textContent = displayDate;
+      });
+
+      // Close dialog when clicking outside (backdrop click)
+      document.querySelectorAll('dialog').forEach(dialog => {
+        dialog.addEventListener('click', (e) => {
+          const rect = dialog.getBoundingClientRect();
+          const isInDialog = (
+            e.clientX >= rect.left &&
+            e.clientX <= rect.right &&
+            e.clientY >= rect.top &&
+            e.clientY <= rect.bottom
+          );
+          if (!isInDialog) {
+            dialog.close();
+          }
+        });
+      });
+    })();
+  </script>
+
+
+  
+
+
+  <!-- Dynamic Date, Search & Notification Script -->
+  <script>
+    (function() {
+      // 1. Dynamic date updates
+      const today = new Date();
+      const displayDate = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const inputDate = today.toISOString().split('T')[0];
+
+      document.querySelectorAll('input[type="date"]').forEach(input => {
+        input.value = inputDate;
+      });
+
+      document.querySelectorAll('.header-date-text').forEach(el => {
+        el.textContent = displayDate;
+      });
+
+      // 2. Close dialog when clicking outside (backdrop click)
+      document.querySelectorAll('dialog').forEach(dialog => {
+        dialog.addEventListener('click', (e) => {
+          const rect = dialog.getBoundingClientRect();
+          const isInDialog = (
+            e.clientX >= rect.left &&
+            e.clientX <= rect.right &&
+            e.clientY >= rect.top &&
+            e.clientY <= rect.bottom
+          );
+          if (!isInDialog) {
+            dialog.close();
+          }
+        });
+      });
+
+      // 3. Notification Dropdown Integration & Live Polling
+      const notifBtn = Array.from(document.querySelectorAll('header button')).find(btn => {
+        const span = btn.querySelector('.material-symbols-outlined');
+        return span && span.textContent.trim() === 'notifications';
+      });
+
+      if (notifBtn) {
+        // Create dropdown container if not exists
+        let dropdown = notifBtn.querySelector('.notifications-dropdown-menu');
+        if (!dropdown) {
+          dropdown = document.createElement('div');
+          dropdown.className = 'notifications-dropdown-menu absolute right-0 mt-3 w-80 glass-card bg-[#0b1326]/95 border border-white/10 rounded-2xl shadow-2xl p-4 z-50 text-xs text-[#dae2fd] hidden';
+          dropdown.style.top = '100%';
+          dropdown.style.cursor = 'default';
+          dropdown.style.textAlign = 'left';
+          dropdown.style.userSelect = 'text';
+
+          // Stop clicks inside dropdown from propagating
+          dropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+          });
+          notifBtn.appendChild(dropdown);
+        }
+
+        let notifications = [];
+
+        async function fetchNotifications() {
+          try {
+            const res = await fetch("http://localhost:5001/api/notifications");
+            if (res.ok) {
+              notifications = await res.json();
+              renderNotifications();
+            }
+          } catch (err) {
+            console.error("Failed to fetch notifications", err);
+          }
+        }
+
+        async function markAllAsRead() {
+          try {
+            const res = await fetch("http://localhost:5001/api/notifications/read-all", {
+              method: "PUT"
+            });
+            if (res.ok) {
+              fetchNotifications();
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }
+
+        async function markAsRead(id) {
+          try {
+            const res = await fetch(`http://localhost:5001/api/notifications/${id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ read: true })
+            });
+            if (res.ok) {
+              fetchNotifications();
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }
+
+        function renderNotifications() {
+          const unreadCount = notifications.filter(n => !n.read).length;
+          const badge = notifBtn.querySelector('.bg-error') || notifBtn.querySelector('span[class*="bg-error"]');
+          if (badge) {
+            if (unreadCount > 0) {
+              badge.style.display = 'flex';
+              badge.className = 'absolute bg-error text-white font-extrabold text-[8px] flex items-center justify-center rounded-full animate-pulse border border-[#0b1326]';
+              badge.style.width = '16px';
+              badge.style.height = '16px';
+              badge.style.top = '2px';
+              badge.style.right = '2px';
+              badge.textContent = unreadCount;
+            } else {
+              badge.style.display = 'none';
+            }
+          }
+
+          let html = `
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/5 font-bold" style="user-select: none;">
+              <span class="text-primary font-bold">Clinical Alerts</span>
+              \${unreadCount > 0 ? `<button class="mark-all-read text-[10px] text-primary-container hover:underline cursor-pointer font-medium" style="background:none; border:none; padding:0;">Mark all read</button>` : ''}
+            </div>
+            <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar select-text">
+          `;
+
+          if (notifications.length === 0) {
+            html += `<div class="text-center py-6 text-on-surface-variant opacity-60">No new alerts</div>`;
+          } else {
+            notifications.forEach(n => {
+              const id = n._id || n.id;
+              html += `
+                <div class="p-2.5 rounded-xl border transition-all cursor-pointer notif-item \${
+                  n.read 
+                    ? "bg-white/5 border-white/5 opacity-60" 
+                    : "bg-primary-container/5 border-primary-container/20 hover:bg-primary-container/10"
+                }" data-id="\${id}" style="margin-bottom: 8px;">
+                  <div class="flex justify-between items-start gap-2">
+                    <p class="font-medium \${n.read ? "text-on-surface-variant" : "text-primary"}" style="margin: 0; line-height: 1.3;">
+                      \${n.text}
+                    </p>
+                    <span class="text-[8px] text-on-surface-variant font-mono shrink-0" style="white-space: nowrap;">\${n.time}</span>
+                  </div>
+                  <div class="mt-1 flex items-center justify-between">
+                    <span class="text-[8px] uppercase tracking-wider font-bold \${
+                      n.type === 'urgent' ? 'text-error' : n.type === 'success' ? 'text-tertiary-container' : 'text-primary-container'
+                    }">
+                      \${n.type}
+                    </span>
+                    \${!n.read ? `<span class="w-1.5 h-1.5 bg-[#00f0ff] rounded-full"></span>` : ''}
+                  </div>
+                </div>
+              `;
+            });
+          }
+
+          html += `</div>`;
+          dropdown.innerHTML = html;
+
+          // Event Listeners for inside dropdown
+          const markAllBtn = dropdown.querySelector('.mark-all-read');
+          if (markAllBtn) {
+            markAllBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              markAllAsRead();
+            });
+          }
+
+          dropdown.querySelectorAll('.notif-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const id = item.getAttribute('data-id');
+              markAsRead(id);
+            });
+          });
+        }
+
+        fetchNotifications();
+        setInterval(fetchNotifications, 4000);
+
+        notifBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdown.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', () => {
+          dropdown.classList.add('hidden');
+        });
+      }
+
+      // 4. Live Search Synchronizer & Filter
+      const globalSearchInput = document.querySelector('header input[placeholder*="Search"]');
+      if (globalSearchInput) {
+        const pageSearchInputs = [
+          'pharmacySearchInput',
+          'otSearchInput',
+          'bedSearchInput',
+          'reportsSearchInput',
+          'appointmentSearch',
+          'billingSearchInput',
+          'revenueSearchInput',
+          'doctorSearchInput',
+          'patientsSearchInput',
+          'staffSearchInput',
+          'pantrySearchInput'
+        ];
+
+        const triggerSearch = (query) => {
+          query = query.toLowerCase().trim();
+
+          // Sync other page search inputs
+          pageSearchInputs.forEach(id => {
+            const inp = document.getElementById(id);
+            if (inp && inp !== globalSearchInput && inp.value !== query) {
+              inp.value = query;
+              inp.dispatchEvent(new Event('input'));
+            }
+          });
+
+          // Filter tables
+          document.querySelectorAll('main table').forEach(table => {
+            table.querySelectorAll('tbody tr').forEach(row => {
+              if (row.querySelector('th')) return;
+              const text = row.innerText.toLowerCase();
+              row.style.display = text.includes(query) ? '' : 'none';
+            });
+          });
+
+          // Fallback bed availability grid filtering
+          if (window.location.pathname.includes('bed_availability.html')) {
+            document.querySelectorAll('.grid > .glass-card').forEach(card => {
+              const text = card.innerText.toLowerCase();
+              if (card.querySelector('h3') && (card.innerText.includes('GW-') || card.innerText.includes('ICU-') || card.innerText.includes('ER-') || card.innerText.includes('PED-'))) {
+                card.style.display = text.includes(query) ? '' : 'none';
+              }
+            });
+          }
+        };
+
+        globalSearchInput.addEventListener('input', (e) => {
+          triggerSearch(e.target.value);
+        });
+
+        pageSearchInputs.forEach(id => {
+          const inp = document.getElementById(id);
+          if (inp) {
+            inp.addEventListener('input', (e) => {
+              if (globalSearchInput.value !== e.target.value) {
+                globalSearchInput.value = e.target.value;
+              }
+            });
+          }
+        });
+      }
+    })();
+  </script>
+
+</body>
+</html>

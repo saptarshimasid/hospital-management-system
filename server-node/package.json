@@ -1,0 +1,20 @@
+{
+  "name": "health-copilot-node-server",
+  "version": "1.0.0",
+  "description": "Express.js API Gateway for Health Copilot",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "nodemon main.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^9.7.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

@@ -166,10 +166,15 @@
 </head>
 <body class="font-body-md text-body-md antialiased">
   <!-- Sidebar Navigation -->
-  <aside class="h-screen w-72 fixed left-0 top-0 bg-surface/60 backdrop-blur-xl border-r border-white/10 shadow-2xl flex flex-col py-md z-50">
-    <div class="px-md mb-xl">
-      <h1 class="font-headline-md text-headline-md font-bold text-primary">Health Copilot</h1>
-      <p class="font-label-md text-label-md text-on-surface-variant opacity-70">Medical Command Center</p>
+  <aside id="sidebar" class="h-screen w-72 fixed left-0 top-0 bg-[#0b1326]/95 border-r border-white/10 shadow-2xl flex flex-col py-md z-50 transition-transform duration-300 -translate-x-full md:translate-x-0">
+    <div class="px-md mb-xl flex justify-between items-center">
+      <div>
+        <h1 class="font-headline-md text-headline-md font-bold text-primary">Health Copilot</h1>
+        <p class="font-label-md text-label-md text-on-surface-variant opacity-70">Medical Command Center</p>
+      </div>
+      <button onclick="toggleSidebar(false)" class="md:hidden p-1.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-error transition-all">
+        <span class="material-symbols-outlined">close</span>
+      </button>
     </div>
     <nav class="flex-1 space-y-1">
       <!-- Dashboard -->
@@ -212,6 +217,11 @@
         <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medication</span>
         <span class="font-label-md text-label-md">Pharmacy</span>
       </a>
+      <!-- Diagnosis -->
+      <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="diagnosis.html">
+        <span class="material-symbols-outlined">diagnose</span>
+        <span class="font-label-md text-label-md">Diagnosis</span>
+      </a>
       <!-- Pantry -->
       <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors" href="pantry.html">
         <span class="material-symbols-outlined">restaurant</span>
@@ -248,11 +258,16 @@
       </div>
     </div>
   </aside>
+  <!-- Mobile Sidebar Backdrop -->
+  <div id="sidebarBackdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden md:hidden"></div>
 
   <!-- Top Navigation -->
-  <header class="fixed top-0 right-0 w-[calc(100%-18rem)] h-20 z-40 bg-surface-container/40 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-margin-desktop shadow-sm">
+  <header class="fixed top-0 right-0 w-full md:w-[calc(100%-18rem)] h-20 z-40 bg-surface-container/40 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-4 md:px-margin-desktop shadow-sm">
     <div class="flex items-center gap-lg">
-      <div class="relative w-96">
+      <button onclick="toggleSidebar(true)" class="md:hidden p-2 rounded-xl text-on-surface-variant hover:bg-surface-variant/20 border border-white/5 mr-1 cursor-pointer shrink-0">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <div class="relative w-72 sm:w-96">
         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-md">search</span>
         <input id="pharmacySearchInput" class="w-full bg-surface-container-lowest border-none rounded-full py-2 pl-10 pr-4 text-body-sm focus:ring-2 focus:ring-primary-container/50 text-on-surface placeholder-on-surface-variant/50" placeholder="Search medications, categories, or SKUs..." type="text">
       </div>
@@ -272,7 +287,7 @@
   </header>
 
   <!-- Main Content Canvas -->
-  <main class="ml-72 pt-24 px-margin-desktop pb-xl min-h-screen">
+  <main class="ml-0 md:ml-72 pt-24 px-4 md:px-margin-desktop pb-xl min-h-screen">
     <!-- Welcome Header -->
     <section class="mb-lg flex justify-between items-end">
       <div>
@@ -292,7 +307,7 @@
     </section>
 
     <!-- Stats Grid -->
-    <section class="grid grid-cols-1 md:grid-cols-5 gap-gutter mb-lg">
+    <section class="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-gutter mb-lg">
       <!-- Total Medications -->
       <div class="glass-card p-md rounded-xl inner-glow">
         <div class="flex justify-between items-start mb-sm">
@@ -758,6 +773,9 @@
   
 
 
+  
+
+
   <!-- Dynamic Date, Search & Notification Script -->
   <script>
     (function() {
@@ -959,7 +977,8 @@
           'doctorSearchInput',
           'patientsSearchInput',
           'staffSearchInput',
-          'pantrySearchInput'
+          'pantrySearchInput',
+          'diagnosisSearchInput'
         ];
 
         const triggerSearch = (query) => {
@@ -1009,6 +1028,21 @@
           }
         });
       }
+
+      // 5. Sidebar Toggle Trigger (Global window helper)
+      window.toggleSidebar = function(open) {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (sidebar && backdrop) {
+          if (open) {
+            sidebar.classList.remove('-translate-x-full');
+            backdrop.classList.remove('hidden');
+          } else {
+            sidebar.classList.add('-translate-x-full');
+            backdrop.classList.add('hidden');
+          }
+        }
+      };
     })();
   </script>
 

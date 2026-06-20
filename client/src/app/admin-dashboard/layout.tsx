@@ -20,7 +20,10 @@ import {
   Settings,
   Search,
   Bell,
-  LogOut
+  LogOut,
+  Menu,
+  X,
+  Activity
 } from "lucide-react";
 import SmoothScroll from "../components/SmoothScroll";
 import CopilotChat from "../components/CopilotChat";
@@ -41,6 +44,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   interface DBNotification {
     _id?: string;
     id?: string;
@@ -117,6 +121,7 @@ export default function DashboardLayout({
     { name: "Patients", href: "/admin-dashboard/patients", icon: Users },
     { name: "Staff", href: "/admin-dashboard/staff", icon: Briefcase },
     { name: "Pharmacy", href: "/admin-dashboard/pharmacy", icon: Pill },
+    { name: "Diagnosis", href: "/admin-dashboard/diagnosis", icon: Activity },
     { name: "Pantry", href: "/admin-dashboard/pantry", icon: Utensils },
     { name: "Billing", href: "/admin-dashboard/billing", icon: DollarSign },
     { name: "Revenue", href: "/admin-dashboard/revenue", icon: TrendingUp },
@@ -130,15 +135,25 @@ export default function DashboardLayout({
         <div className="min-h-screen bg-[#0b1326] flex text-[#dae2fd]">
         
         {/* Sidebar Navigation */}
-        <aside className="w-72 fixed left-0 top-0 h-screen bg-[#0b1326]/60 backdrop-blur-xl border-r border-white/10 shadow-2xl flex flex-col py-6 z-30 select-none">
-          <div className="px-6 mb-10">
-            <h1 className="text-xl font-bold text-primary flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#00f0ff] animate-pulse" />
-              Health Copilot
-            </h1>
-            <p className="text-[10px] text-on-surface-variant opacity-70 uppercase tracking-widest mt-1">
-              Medical Command Center
-            </p>
+        <aside className={`w-72 fixed left-0 top-0 h-screen bg-[#0b1326]/95 border-r border-white/10 shadow-2xl flex flex-col py-6 z-40 select-none transition-transform duration-300 md:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}>
+          <div className="px-6 mb-10 flex justify-between items-center">
+            <div>
+              <h1 className="text-xl font-bold text-primary flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#00f0ff] animate-pulse" />
+                Health Copilot
+              </h1>
+              <p className="text-[10px] text-on-surface-variant opacity-70 uppercase tracking-widest mt-1">
+                Medical Command Center
+              </p>
+            </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden p-1.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-error transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
           <nav className="flex-1 space-y-0.5 overflow-y-auto custom-scrollbar">
@@ -149,6 +164,7 @@ export default function DashboardLayout({
                 <Link
                   key={item.name}
                   href={item.href}
+                  onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-6 py-3.5 transition-all text-xs ${
                     isActive
                       ? "text-tertiary-container border-l-4 border-tertiary-container bg-tertiary-container/5 font-semibold"
@@ -177,17 +193,33 @@ export default function DashboardLayout({
           </div>
         </aside>
 
+        {/* Sidebar backdrop overlay for mobile */}
+        {sidebarOpen && (
+          <div
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden animate-fade-in"
+          />
+        )}
+
         {/* Top Header */}
-        <header className="fixed top-0 right-0 w-[calc(100%-18rem)] h-20 z-20 bg-[#0b1326]/30 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-10 shadow-sm">
-          <div className="relative w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4 opacity-60" />
-            <input
-              type="text"
-              placeholder="Search patients, medical records, or doctors..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#060e20]/60 border border-white/5 rounded-full py-2 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary/50 text-on-surface placeholder-on-surface-variant/40 focus:outline-none"
-            />
+        <header className="fixed top-0 right-0 w-full md:w-[calc(100%-18rem)] h-20 z-20 bg-[#0b1326]/30 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-4 md:px-10 shadow-sm">
+          <div className="flex items-center gap-2 flex-1 md:flex-initial">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 rounded-xl text-on-surface-variant hover:bg-white/5 border border-white/5 mr-2 cursor-pointer shrink-0"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="relative w-full max-w-[24rem]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4 opacity-60" />
+              <input
+                type="text"
+                placeholder="Search patients, medical records, or doctors..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#060e20]/60 border border-white/5 rounded-full py-2 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary/50 text-on-surface placeholder-on-surface-variant/40 focus:outline-none"
+              />
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative" ref={notificationRef}>
@@ -270,7 +302,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Main Content Layout Container */}
-        <main className="ml-72 pt-28 px-10 pb-12 w-[calc(100%-18rem)] min-h-screen">
+        <main className="ml-0 md:ml-72 pt-28 px-4 md:px-10 pb-12 w-full md:w-[calc(100%-18rem)] min-h-screen">
           {children}
         </main>
 

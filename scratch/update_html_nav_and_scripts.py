@@ -12,6 +12,7 @@ nav_items = [
     {"name": "Patients", "href": "patients.html", "icon": "groups"},
     {"name": "Staff", "href": "staff.html", "icon": "medical_services"},
     {"name": "Pharmacy", "href": "pharmacy.html", "icon": "medication"},
+    {"name": "Diagnosis", "href": "diagnosis.html", "icon": "diagnose"},
     {"name": "Pantry", "href": "pantry.html", "icon": "restaurant"},
     {"name": "Billing", "href": "billing.html", "icon": "payments"},
     {"name": "Revenue", "href": "revenue.html", "icon": "trending_up"},
@@ -221,7 +222,8 @@ js_script = """
           'doctorSearchInput',
           'patientsSearchInput',
           'staffSearchInput',
-          'pantrySearchInput'
+          'pantrySearchInput',
+          'diagnosisSearchInput'
         ];
 
         const triggerSearch = (query) => {
@@ -271,6 +273,21 @@ js_script = """
           }
         });
       }
+
+      // 5. Sidebar Toggle Trigger (Global window helper)
+      window.toggleSidebar = function(open) {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (sidebar && backdrop) {
+          if (open) {
+            sidebar.classList.remove('-translate-x-full');
+            backdrop.classList.remove('hidden');
+          } else {
+            sidebar.classList.add('-translate-x-full');
+            backdrop.classList.add('hidden');
+          }
+        }
+      };
     })();
   </script>
 """
@@ -279,7 +296,6 @@ def generate_nav(active_filename):
     lines = []
     for item in nav_items:
         is_active = (item["href"] == active_filename)
-        # Settings is never marked active on other files, andSettings doesn't have its own file
         if is_active:
             lines.append(f"""      <!-- {item['name']} (Active) -->
       <a class="flex items-center gap-3 px-6 py-4 text-tertiary-container border-l-4 border-tertiary-container bg-tertiary-container/10 transition-all duration-150 active:scale-[0.98]" href="{item['href']}">
@@ -301,39 +317,90 @@ for filename in os.listdir(workspace_dir):
             content = f.read()
 
         # 1. Update navigation sidebar
-        # Match <nav class="flex-1 space-y-1"> ... </nav>
         nav_pattern = re.compile(r'(<nav class="flex-1 space-y-1">)(.*?)(</nav>)', re.DOTALL)
         new_nav_content = f"\n{generate_nav(filename)}\n    "
         content, count = nav_pattern.subn(rf'\g<1>{new_nav_content}\g<3>', content)
         if count > 0:
             print(f"Updated nav sidebar in {filename}")
-        else:
-            print(f"WARNING: Could not find nav element in {filename}")
 
-        # 2. Clean up any existing injected or duplicate date/notification/centering scripts
-        # Pattern 1: match old date/centering script
+        # 2. Add Mobile Responsiveness Transformations to all views
+        # A. Make aside sidebar slideable and overlayable
+        # Target: <aside ...>
+        aside_pattern = re.compile(r'<aside\b[^>]*class="([^"]*)"[^>]*>', re.IGNORECASE)
+        new_aside_tag = '<aside id="sidebar" class="h-screen w-72 fixed left-0 top-0 bg-[#0b1326]/95 border-r border-white/10 shadow-2xl flex flex-col py-md z-50 transition-transform duration-300 -translate-x-full md:translate-x-0">'
+        content = aside_pattern.sub(new_aside_tag, content)
+
+        # B. Inject Close Button in the sidebar heading wrapper if not exists
+        sidebar_header_pattern = re.compile(r'<div class="px-md mb-xl">(?!\s*<div class="px-md mb-xl flex justify-between)', re.DOTALL)
+        new_sidebar_header = """<div class="px-md mb-xl flex justify-between items-center">
+      <div>
+        <h1 class="font-headline-md text-headline-md font-bold text-primary">Health Copilot</h1>
+        <p class="font-label-md text-label-md text-on-surface-variant opacity-70">Medical Command Center</p>
+      </div>
+      <button onclick="toggleSidebar(false)" class="md:hidden p-1.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-error transition-all">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>"""
+        # If we replaced it, we also need to strip the old layout header if matched below
+        content = content.replace('<div class="px-md mb-xl">\n      <h1 class="font-headline-md text-headline-md font-bold text-primary">Health Copilot</h1>\n      <p class="font-label-md text-label-md text-on-surface-variant opacity-70">Medical Command Center</p>\n    </div>', new_sidebar_header)
+        content = content.replace('<div class="px-md mb-xl">\n      <h1 class="font-headline-md text-headline-md font-bold text-primary">Health Copilot</h1>\n      <p class="font-label-md text-label-md text-on-surface-variant opacity-70">Medical Command Center</p>\n    </div>', new_sidebar_header)
+
+        # C. Remove any existing backdrop div to prevent duplication
+        content = re.sub(r'\s*<!-- Mobile Sidebar Backdrop -->\s*<div id="sidebarBackdrop".*?<\/div>', '', content)
+        
+        # Inject the backdrop div right after </aside>
+        content = content.replace("</aside>", "</aside>\n  <!-- Mobile Sidebar Backdrop -->\n  <div id=" + '"sidebarBackdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden md:hidden"></div>')
+
+        # D. Update header for mobile full-width
+        # Target: <header ...>
+        header_pattern = re.compile(r'<header class="fixed top-0 right-0 w-\[calc\(100%-18rem\)\] h-20 z-40 bg-surface-container/40 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-margin-desktop shadow-sm">', re.IGNORECASE)
+        new_header_tag = '<header class="fixed top-0 right-0 w-full md:w-[calc(100%-18rem)] h-20 z-40 bg-surface-container/40 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-4 md:px-margin-desktop shadow-sm">'
+        content = header_pattern.sub(new_header_tag, content)
+
+        # E. Add hamburger toggle to the header search wrapper if not exists
+        search_wrapper_pattern = re.compile(r'<div class="flex items-center gap-lg">(?!\s*<button onclick="toggleSidebar)', re.DOTALL)
+        new_search_wrapper = """<div class="flex items-center gap-lg">
+      <button onclick="toggleSidebar(true)" class="md:hidden p-2 rounded-xl text-on-surface-variant hover:bg-surface-variant/20 border border-white/5 mr-1 cursor-pointer shrink-0">
+        <span class="material-symbols-outlined">menu</span>
+      </button>"""
+        content = search_wrapper_pattern.sub(new_search_wrapper, content)
+        
+        # Ensure search input size is responsive
+        content = content.replace('class="w-full bg-surface-container-lowest border-none rounded-full py-2 pl-10 pr-4 text-body-sm focus:ring-2 focus:ring-primary-container/50 text-on-surface placeholder-on-surface-variant/50"', 'class="w-full bg-surface-container-lowest border-none rounded-full py-2 pl-10 pr-4 text-body-sm focus:ring-2 focus:ring-primary-container/50 text-on-surface placeholder-on-surface-variant/50"')
+        content = content.replace('w-96', 'w-72 sm:w-96')
+
+        # F. Make main content grid start at left-0 on mobile
+        # Target: <main ...>
+        main_pattern = re.compile(r'<main class="ml-72 pt-24 px-margin-desktop pb-xl min-h-screen">', re.IGNORECASE)
+        new_main_tag = '<main class="ml-0 md:ml-72 pt-24 px-4 md:px-margin-desktop pb-xl min-h-screen">'
+        content = main_pattern.sub(new_main_tag, content)
+
+        # G. Make telemetry grids responsive (cols-1 on mobile, cols-4 on desktop)
+        # Target: grid-cols-4 or grid-cols-5
+        content = content.replace('grid-cols-4', 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4')
+        content = content.replace('grid-cols-5', 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5')
+        content = content.replace('grid-cols-1 md:grid-cols-4', 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4')
+
+        # 3. Clean up any existing injected or duplicate date/notification/centering scripts
         old_pattern_1 = r"\s*<!-- Dynamic Date & Dialog Centering Script -->.*?<!-- Dynamic Date & Dialog Centering Script -->.*?</script>"
         content = re.sub(old_pattern_1, "", content, flags=re.DOTALL)
         
-        # Pattern 2: match old search/notification script (with comment wrappers)
         old_pattern_2 = r"\s*<!-- Dynamic Date, Search & Notification Script -->.*?<!-- Dynamic Date, Search & Notification Script -->.*?</script>"
         content = re.sub(old_pattern_2, "", content, flags=re.DOTALL)
 
-        # Pattern 3: match raw function wrappers with date/notification/search updates (e.g. without comment wrappers)
         old_pattern_3 = r"\s*<script>\s*\(function\(\)\s*\{\s*// 1\.\s*Dynamic date updates.*?<\/script>"
         content = re.sub(old_pattern_3, "", content, flags=re.DOTALL)
 
-        # Remove extra text remnants
         if "Dynamic Date & Dialog Centering Script" in content:
             content = content.replace("<!-- Dynamic Date & Dialog Centering Script -->", "")
         if "Dynamic Date, Search & Notification Script" in content:
             content = content.replace("<!-- Dynamic Date, Search & Notification Script -->", "")
 
-        # 3. Inject new script at the end of body
+        # 4. Inject new script at the end of body
         content = content.replace("</body>", js_script + "\n</body>")
 
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
-        print(f"Injected scripts and cleaned {filename}")
+        print(f"Processed and updated responsiveness in {filename}")
 
 print("Automation script run complete.")

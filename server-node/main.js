@@ -164,8 +164,20 @@ const Prescription = mongoose.model('Prescription', PrescriptionSchema);
 const Report = mongoose.model('Report', ReportSchema);
 const Doctor = mongoose.model('Doctor', DoctorSchema);
 const Staff = mongoose.model('Staff', StaffSchema);
+const DiagnosisSchema = new mongoose.Schema({
+  patientName: { type: String, required: true },
+  age: { type: Number, required: true },
+  gender: { type: String, required: true },
+  doctorName: { type: String, required: true },
+  testType: { type: String, required: true },
+  testDate: { type: String, required: true },
+  results: { type: String, required: true },
+  status: { type: String, default: 'Completed' }
+}, { timestamps: true });
+
 const NotificationModel = mongoose.model('Notification', NotificationSchema);
 const PantryOrder = mongoose.model('PantryOrder', PantrySchema);
+const Diagnosis = mongoose.model('Diagnosis', DiagnosisSchema);
 
 // Database Seeder
 async function seedDatabase() {
@@ -327,6 +339,18 @@ async function seedDatabase() {
       ];
       await PantryOrder.insertMany(orders);
       console.log('Pantry collection seeded');
+    }
+
+    const diagnosisCount = await Diagnosis.countDocuments();
+    if (diagnosisCount === 0) {
+      const initialDiagnoses = [
+        { patientName: "Arthur Morgan", age: 36, gender: "Male", doctorName: "Dr. Sarah Jenkins", testType: "MRI", testDate: "2026-06-18", results: "Scan of left shoulder joints reveals mild inflammation. Rotator cuff is fully intact.", status: "Completed" },
+        { patientName: "Joel Miller", age: 48, gender: "Male", doctorName: "Dr. Aisha Khan", testType: "Pathology", testDate: "2026-06-19", results: "Blood panel shows slightly elevated cholesterol. White blood cell count within normal range.", status: "Completed" },
+        { patientName: "Elena Fisher", age: 32, gender: "Female", doctorName: "Dr. David Carter", testType: "X-Ray", testDate: "2026-06-19", results: "Chest X-Ray displays clear lung fields. No signs of consolidation or pleural effusion.", status: "Completed" },
+        { patientName: "Nathan Drake", age: 35, gender: "Male", doctorName: "Dr. Sarah Jenkins", testType: "USG", testDate: "2026-06-20", results: "Abdominal ultrasound confirms normal size and echotexture of liver, kidneys, and spleen.", status: "Completed" }
+      ];
+      await Diagnosis.insertMany(initialDiagnoses);
+      console.log('Diagnosis collection seeded');
     }
   } catch (err) {
     console.error('Seeding failed:', err);
@@ -913,6 +937,70 @@ app.put('/api/pantry/:id', async (req, res) => {
 app.delete('/api/pantry/:id', async (req, res) => {
   try {
     await PantryOrder.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Diagnosis CRUD
+app.get('/api/diagnoses', async (req, res) => {
+  try {
+    const list = await Diagnosis.find().sort({ createdAt: -1 });
+    res.json(list);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/diagnoses', async (req, res) => {
+  try {
+    const item = new Diagnosis(req.body);
+    await item.save();
+
+    // Auto-create notification
+    const alert = new NotificationModel({
+      text: `New diagnosis results uploaded for ${item.patientName}: ${item.testType}`,
+      type: "info",
+      time: "Just now",
+      read: false
+    });
+    await alert.save();
+
+    res.status(201).json(item);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.put('/api/diagnoses/:id', async (req, res) => {
+  try {
+    const { status, results } = req.body;
+    const updateData = {};
+    if (status) updateData.status = status;
+    if (results) updateData.results = results;
+
+    const item = await Diagnosis.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    if (!item) return res.status(404).json({ error: "Diagnosis record not found" });
+
+    // Dynamic notification
+    const alert = new NotificationModel({
+      text: `Diagnosis test results updated for ${item.patientName}`,
+      type: "success",
+      time: "Just now",
+      read: false
+    });
+    await alert.save();
+
+    res.json(item);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/api/diagnoses/:id', async (req, res) => {
+  try {
+    await Diagnosis.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (error) {
     res.status(400).json({ error: error.message });

@@ -1,14 +1,12 @@
 # Dependencies
 node_modules/
 client/node_modules/
-server-node/node_modules/
 
 # Next.js Build Output
 client/.next/
 client/out/
 
 # Python Virtual Environments
-server-python/venv/
 .venv/
 ENV/
 env/

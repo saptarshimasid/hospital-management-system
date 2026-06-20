@@ -196,10 +196,7 @@ export default function PatientsPage() {
     }
   };
 
-  // Note: We don't have DELETE /api/patients/:id on the node server, but let's check. 
-  // Let's add it if needed, or we can just mock it or edit the server if we want delete patient support.
-  // Wait, let's check server-node/main.js to see if DELETE /api/patients/:id is there. No, only POST and GET for patients.
-  // Let's implement DELETE patient endpoint or just log it. Let's see if we should implement DELETE in server-node/main.js later. We can do that easily if needed. Let's add a DELETE patient endpoint to main.js as well.
+  // Delete patient record via API
   const handleDeletePatient = async (id: string, name: string) => {
     // If the backend has delete, call it. Else show simulated deletion.
     try {

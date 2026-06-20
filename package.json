@@ -1,16 +1,10 @@
 {
   "name": "health-copilot-monorepo",
   "version": "1.0.0",
-  "description": "Health Copilot Monorepo containing Next.js client, Express API Gateway, and FastAPI Python LangGraph agent.",
+  "description": "Health Copilot Next.js Web App with integrated Supabase Database and Gemini AI API.",
   "scripts": {
-    "install:all": "npm install && npm install --prefix client && npm install --prefix server-node && npm run setup:python",
-    "setup:python": "cd server-python && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt",
-    "dev:client": "npm run dev --prefix client",
-    "dev:node": "npm run dev --prefix server-node",
-    "dev:python": "cd server-python && ./venv/bin/python -m uvicorn main:app --reload --port 8000",
-    "dev": "npx concurrently \"npm run dev:client\" \"npm run dev:node\" \"npm run dev:python\""
-  },
-  "dependencies": {
-    "concurrently": "^8.2.2"
+    "dev": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "start": "npm run start --prefix client"
   }
 }

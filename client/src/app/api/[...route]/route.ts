@@ -575,6 +575,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
   const path = route.join('/');
 
   try {
+    if (path === 'notifications/clear-all' || path === 'notifications') {
+      await pool.query('DELETE FROM notifications');
+      return NextResponse.json({ success: true });
+    }
+
     if (path.startsWith('patients/') && route.length === 2) {
       const id = route[1];
       await Patient.findByIdAndDelete(id);

@@ -98,6 +98,19 @@ export default function DashboardLayout({
     }
   };
 
+  const clearAllNotifications = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications/clear-all`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        fetchNotifications();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const markAsRead = async (id: string) => {
     try {
       const res = await fetch(`${API_BASE}/api/notifications/${id}`, {
@@ -247,14 +260,24 @@ export default function DashboardLayout({
                   >
                     <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
                       <span className="font-bold text-primary">Clinical Alerts</span>
-                      {notifications.some(n => !n.read) && (
-                        <button
-                          onClick={markAllAsRead}
-                          className="text-[10px] text-primary-container hover:underline cursor-pointer font-medium"
-                        >
-                          Mark all read
-                        </button>
-                      )}
+                      <div className="flex gap-2.5">
+                        {notifications.some(n => !n.read) && (
+                          <button
+                            onClick={markAllAsRead}
+                            className="text-[10px] text-primary-container hover:underline cursor-pointer font-medium"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        {notifications.length > 0 && (
+                          <button
+                            onClick={clearAllNotifications}
+                            className="text-[10px] text-error hover:underline cursor-pointer font-medium"
+                          >
+                            Clear all
+                          </button>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar select-text">

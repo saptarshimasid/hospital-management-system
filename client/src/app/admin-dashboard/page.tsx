@@ -110,31 +110,15 @@ export default function Dashboard() {
       // Fallback mock dataset matching backend design
       setMetrics({
         stats: {
-          totalPatients: { value: "12,482", change: "+12%", type: "up" },
-          totalDoctors: { value: "156", change: null, type: null },
-          totalStaff: { value: "482", change: null, type: null },
-          weeklyRevenue: { value: "$1.2M", change: "+8%", type: "up" },
-          bedAvailability: { value: "14 / 250", status: "Critical", occupancyRate: "94.4%" }
+          totalPatients: { value: "0", change: "", type: "" },
+          totalDoctors: { value: "0", change: null, type: null },
+          totalStaff: { value: "0", change: null, type: null },
+          weeklyRevenue: { value: "$0", change: "", type: "" },
+          bedAvailability: { value: "0 / 0", status: "Stable", occupancyRate: "0%" }
         },
-        departments: [
-          { name: "Cardiology", value: 84 },
-          { name: "Neurology", value: 62 },
-          { name: "Pediatrics", value: 91 },
-          { name: "Oncology", value: 45 },
-          { name: "ER", value: 98 }
-        ],
-        recentPatients: [
-          { id: "#PAT-8821", name: "Arthur Morgan", condition: "Hypertension", admission: "Feb 20, 14:30", status: "Stable", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDmVsYcVmImeZHkXR5iUfIXPI5aazV4igMcaxMipsm2kMl5kuVusqoSIq-_yNJFvRtmx8XT825hAdfxKHm-uLdedCQx8UUlPTKptmJMQ2djWKfH3-GAkQcOrF3HxxoeEyJZQGfYd1IbXEdL0CnvJRvSHAnNzMaCI7UtJec2u2omFQCj1GWZZ2pRt9XNSCO4eoCRCrG-bXSl5ofe3yq-gt_OF0pG-A3Xnf-SFBpyhOtZip_ULAYFhioMcc4K9XMrYT3Q59FkV-OTwBw", gender: "Male", age: 36, email: "arthur@morgan.com" },
-          { id: "#PAT-9012", name: "Elena Fisher", condition: "Acute Viral", admission: "Feb 21, 09:15", status: "Treatment", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBDN3UVTzPzv0Af2e0RzKnIIEO4r9e__EQuYHMnJvh8UWv-6lnXFoZRlJKfi3IvG3LLUscX7j-SPCjcEm0KgmjBmAnhC72OshfvEi8pRB-SQCzdTNWkTSsMT7kZitjLz-d3s3iLxtJfFw-iLSvTcA9S0n-tUmzRtM2g-S0qOEN1qSdigBzn5aT2mtV550DjEN1kz_ZLg95eUGLgGJM4N9nVwt2TYQZfAYgh1xulrJwbYA7exPFK3j0QF1bsBBtzt0yyWHaVnLn9wik", gender: "Female", age: 29, email: "elena@fisher.com" },
-          { id: "#PAT-4432", name: "Joel Miller", condition: "Fracture (L2)", admission: "Feb 21, 11:45", status: "Urgent", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuA23_Q91hh10bCN4f7gJMFJprKGgpdptxHMK6c2eIhhcE7Q1TwIjwKEdPjyA9YYKSl032mfuO_o3N6s9MQFH4wr0DGj2Us5Wp0mJFGwNWwhDCBhrD0RbRv1QbKMm8J2aKhnnm1_ZAcm530LQcyGmWwAtM2GziqffApwuWxx8-KpmpGPPZAucb8LNGMiTBmoS0xf4dEgNGrr--uC1FJxMybebjelAz2aB0FssgL75f3n8a9Tl3FPaC4cu6ASoSH5rEHOXQ85i2rHMq8", gender: "Male", age: 48, email: "joel@miller.com" },
-          { id: "#PAT-1109", name: "Leo Vance", condition: "Observation", admission: "Feb 22, 16:20", status: "Pending", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzLc-0PWFHLrfwLUNgEq48dDtFLusQjORiJhyAfCUgvYExrc_n6uN6rkyJlK8Go7hirf_te7NG-fXD7XDbC2gCGoWXKCdkwl5DOrUlMVwbhj_OFawGKER3rxK1fs9605FDUh5HTfYITdo2tEHU_nEKhkQWf7FZ-pbWIXWfiiyTnaUqFGgOeG_2yOARP6sroNOt-E1ylF-DrJCdHkMoHImiKHjK3kAQ0HKnDU08iq7uKukIFsUGRNdex7d0xSkceUiMAnPVp6g5ecg", gender: "Male", age: 62, email: "leo@vance.com" }
-        ],
-        shifts: [
-          { name: "Dr. Aisha Khan", role: "Surgeon", time: "08:00 - 16:00", active: true, img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCxE0Kc-a84miM3cx60p-is_bmHfiuDni2VYTT13G7qH4EHo7VInDBPQf4KvsZEdoY4BjpC5ilIM2izkMM9QWnv942pBrRN6W5DJSpzZWc1zarDgsffmVC1fjLswQ3Bc-exrEkeyXHSvEfAXOGgX1IUEjt_u_EqScu7e0V96-bf-KRzX4MBcMGdyC-zZ8A7lhCflEHR03TY2y6IIxnexbbIGi_iBRgeYSOjnTIqtkcnQ8u3c9X_FAEKptPJrNL3bAtuyqgIJWLEi-g" },
-          { name: "Nurse Jack Reed", role: "ER Duty", time: "10:00 - 22:00", active: true, img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCbqlNGf-UBP_bmKLEIHXW5ME0N4fUpm-v4zHLxw-AmDgCJcabHGydiLTCy6hNGWmJdjUG2Td1Pt9q2Aw-lKECxeJVxN_0eZcz_f7hGkM2DAjMRLYSKQzSgUiwCRmZHxfOuYFzGIIoB-OB9nRffi34kZ3fB50Sy-HQhFlaJBt2FVqEC-pPcYRk0twUKXpVD8hd9OLV_k5TDjnwMC_t4Dsq-OQIKd5qGhX16CSZekIV6YjEIkL1vZCC-fh5BFS_EcDuhWnna0oGZHbU" },
-          { name: "Dr. Helena Troy", role: "On Call", time: "24H", active: true, img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBUR93vsX8-PeJEf1vGo8anymPqpciIEu9_x9IjqrdZVQwRFInWdZrZh6EzF98zhcTAmu_qo75Zgq62h2u1qhebSvRpv8x9AdnDALYA2yPyr7nokvD2GDDZcOQynWOdukWkeiebcJhfXbKTWxTKwBvrfayAZQVJWFzwXqW01XzNzkzLnGnX6VWvfWZzXmROwFxKzACpOmHaTRUfrTcmj9buFrYebCfW0MG8AUWnuLh0dNVA-DRbYj5WYsqfFohmMdu7i7c3SPhaaDI" },
-          { name: "Mark Stevens", role: "Tech", time: "Tomorrow 06:00", active: false, img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB3E3D4czQ2WyFUklLEShTpvakILDd2oKeW2gRacONc5PsddD7Zp-0koHPaE1dcs84hb9548ofn-d11m9p8S7breKKUZQ-Z9aYENF7P8cn8QomCfUEtZRIIHU4mw2Q-AN8jEg6SFyL4Jb1jBTBnJU8rbxe1UOxk1Wna-0E70nPywG7REgfFIjVmMQob1Q5Rxy5LcaaV1qTG6BdyvSijX-5K1EZI0BazLkMiXZ3kGOqDRrAbNRhmY0SOmrTCbWLYXutH0l8G7u5blZc" }
-        ],
+        departments: [],
+        recentPatients: [],
+        shifts: [],
         monthlyRevenue: [0, 0, 0, 0, 0, 0]
       });
     }

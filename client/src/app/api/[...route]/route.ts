@@ -126,7 +126,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
       const patientsCount = await Patient.countDocuments();
       const activeBeds = await Bed.countDocuments({ status: 'occupied' });
       const cleaningBeds = await Bed.countDocuments({ status: 'cleaning' });
-      const totalBeds = await Bed.countDocuments() || 12;
+      const totalBeds = await Bed.countDocuments();
       const recentPatientsList = await Patient.find().sort({ createdAt: -1 }).limit(10);
       const txns = await Transaction.find();
       
@@ -167,6 +167,26 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
         erVal = Math.round(((await Appointment.countDocuments({ dept: 'Emergency' }) + await Appointment.countDocuments({ dept: 'ER' })) / totalAppts) * 100);
       }
 
+      // Load active doctors and staff to build dynamic shifts array
+      const activeDocs = await Doctor.find().limit(2);
+      const activeStf = await Staff.find().limit(2);
+      const dynamicShifts = [
+        ...activeDocs.map((d: any) => ({
+          name: d.name,
+          role: `${d.dept} Physician`,
+          time: d.schedule || '08:00 - 16:00',
+          active: d.status === 'available',
+          img: d.img || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBUR93vsX8-PeJEf1vGo8anymPqpciIEu9_x9IjqrdZVQwRFInWdZrZh6EzF98zhcTAmu_qo75Zgq62h2u1qhebSvRpv8x9AdnDALYA2yPyr7nokvD2GDDZcOQynWOdukWkeiebcJhfXbKTWxTKwBvrfayAZQVJWFzwXqW01XzNzkzLnGnX6VWvfWZzXmROwFxKzACpOmHaTRUfrTcmj9buFrYebCfW0MG8AUWnuLh0dNVA-DRbYj5WYsqfFohmMdu7i7c3SPhaaDI'
+        })),
+        ...activeStf.map((s: any) => ({
+          name: s.name,
+          role: s.role || 'Staff',
+          time: s.shift || 'Day Shift',
+          active: s.status === 'active',
+          img: s.img || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbqlNGf-UBP_bmKLEIHXW5ME0N4fUpm-v4zHLxw-AmDgCJcabHGydiLTCy6hNGWmJdjUG2Td1Pt9q2Aw-lKECxeJVxN_0eZcz_f7hGkM2DAjMRLYSKQzSgUiwCRmZHxfOuYFzGIIoB-OB9nRffi34kZ3fB50Sy-HQhFlaJBt2FVqEC-pPcYRk0twUKXpVD8hd9OLV_k5TDjnwMC_t4Dsq-OQIKd5qGhX16CSZekIV6YjEIkL1vZCC-fh5BFS_EcDuhWnna0oGZHbU'
+        }))
+      ];
+
       return NextResponse.json({
         stats: {
           totalPatients: { value: patientsCount.toLocaleString(), change: null, type: null },
@@ -203,12 +223,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
           age: p.age,
           email: p.email
         })),
-        shifts: [
-          { name: 'Dr. Aisha Khan', role: 'Surgeon', time: '08:00 - 16:00', active: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCxE0Kc-a84miM3cx60p-is_bmHfiuDni2VYTT13G7qH4EHo7VInDBPQf4KvsZEdoY4BjpC5ilIM2izkMM9QWnv942pBrRN6W5DJSpzZWc1zarDgsffmVC1fjLswQ3Bc-exrEkeyXHSvEfAXOGgX1IUEjt_u_EqScu7e0V96-bf-KRzX4MBcMGdyC-zZ8A7lhCflEHR03TY2y6IIxnexbbIGi_iBRgeYSOjnTIqtkcnQ8u3c9X_FAEKptPJrNL3bAtuyqgIJWLEi-g' },
-          { name: 'Nurse Jack Reed', role: 'ER Duty', time: '10:00 - 22:00', active: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbqlNGf-UBP_bmKLEIHXW5ME0N4fUpm-v4zHLxw-AmDgCJcabHGydiLTCy6hNGWmJdjUG2Td1Pt9q2Aw-lKECxeJVxN_0eZcz_f7hGkM2DAjMRLYSKQzSgUiwCRmZHxfOuYFzGIIoB-OB9nRffi34kZ3fB50Sy-HQhFlaJBt2FVqEC-pPcYRk0twUKXpVD8hd9OLV_k5TDjnwMC_t4Dsq-OQIKd5qGhX16CSZekIV6YjEIkL1vZCC-fh5BFS_EcDuhWnna0oGZHbU' },
-          { name: 'Dr. Helena Troy', role: 'On Call', time: '24H', active: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBUR93vsX8-PeJEf1vGo8anymPqpciIEu9_x9IjqrdZVQwRFInWdZrZh6EzF98zhcTAmu_qo75Zgq62h2u1qhebSvRpv8x9AdnDALYA2yPyr7nokvD2GDDZcOQynWOdukWkeiebcJhfXbKTWxTKwBvrfayAZQVJWFzwXqW01XzNzkzLnGnX6VWvfWZzXmROwFxKzACpOmHaTRUfrTcmj9buFrYebCfW0MG8AUWnuLh0dNVA-DRbYj5WYsqfFohmMdu7i7c3SPhaaDI' },
-          { name: 'Mark Stevens', role: 'Tech', time: 'Tomorrow 06:00', active: false, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3E3D4czQ2WyFUklLEShTpvakILDd2oKeW2gRacONc5PsddD7Zp-0koHPaE1dcs84hb9548ofn-d11m9p8S7breKKUZQ-Z9aYENF7P8cn8QomCfUEtZRIIHU4mw2Q-AN8jEg6SFyL4Jb1jBTBnJU8rbxe1UOxk1Wna-0E70nPywG7REgfFIjVmMQob1Q5Rxy5LcaaV1qTG6BdyvSijX-5K1EZI0BazLkMiXZ3kGOqDRrAbNRhmY0SOmrTCbWLYXutH0l8G7u5blZc' }
-        ],
+        shifts: dynamicShifts,
         monthlyRevenue: monthlyRevenue
       });
     }

@@ -64,6 +64,57 @@ const tableFields = {
   diagnoses: ['patient_name', 'age', 'gender', 'doctor_name', 'test_type', 'test_date', 'results', 'status']
 };
 
+const fs = require('fs');
+const path = require('path');
+
+const knownMappings = {
+  'appointments': 'appointments',
+  'bed-availability': 'beds',
+  'billing': 'invoices',
+  'diagnosis': 'diagnoses',
+  'doctor': 'doctors',
+  'ot': 'surgeries',
+  'pantry': 'pantry_orders',
+  'patients': 'patients',
+  'pharmacy': 'medications',
+  'reports': 'reports',
+  'revenue': 'transactions',
+  'staff': 'staff'
+};
+
+const dynamicTables = [];
+const dynamicModels = {};
+
+function toPascalCase(str) {
+  return str
+    .split(/[-_]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('');
+}
+
+try {
+  const pagesDir = path.join(__dirname, '../client/src/app/admin-dashboard');
+  if (fs.existsSync(pagesDir)) {
+    const files = fs.readdirSync(pagesDir);
+    for (const file of files) {
+      const fullPath = path.join(pagesDir, file);
+      if (fs.statSync(fullPath).isDirectory()) {
+        if (!knownMappings[file]) {
+          const tableName = file.replace(/-/g, '_');
+          const modelName = toPascalCase(file);
+          
+          dynamicTables.push(tableName);
+          dynamicModels[modelName] = tableName;
+          
+          tableFields[tableName] = ['name', 'status', 'details'];
+        }
+      }
+    }
+  }
+} catch (err) {
+  console.warn('[Supabase DB] Failed to scan admin-dashboard directory:', err.message);
+}
+
 class QueryBuilder {
   constructor(tableName, whereClause = {}) {
     this.tableName = tableName;
@@ -502,6 +553,24 @@ async function dbInit() {
       )
     `);
 
+    for (const tableName of dynamicTables) {
+      try {
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS "${tableName}" (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            name TEXT,
+            status TEXT,
+            details JSONB DEFAULT '{}',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        console.log(`[Supabase DB] Dynamic table "${tableName}" active`);
+      } catch (err) {
+        console.error(`[Supabase DB] Failed to create dynamic table "${tableName}":`, err.message);
+      }
+    }
+
     console.log('[Supabase DB] Tables initialized successfully');
     
     // Seed initial records if database is empty
@@ -703,7 +772,7 @@ async function seedDatabase() {
   }
 }
 
-module.exports = {
+const exportsObj = {
   pool,
   dbInit,
   Patient: makeModelInterface('patients'),
@@ -721,3 +790,9 @@ module.exports = {
   PantryOrder: makeModelInterface('pantry_orders'),
   Diagnosis: makeModelInterface('diagnoses')
 };
+
+for (const [modelName, tableName] of Object.entries(dynamicModels)) {
+  exportsObj[modelName] = makeModelInterface(tableName);
+}
+
+module.exports = exportsObj;

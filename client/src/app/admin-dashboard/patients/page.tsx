@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { SearchContext } from "../layout";
@@ -125,7 +126,7 @@ export default function PatientsPage() {
   const fetchPatients = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5001/api/patients");
+      const res = await fetch(`${API_BASE}/api/patients`);
       if (res.ok) {
         const data = await res.json();
         setPatients(
@@ -170,7 +171,7 @@ export default function PatientsPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/patients", {
+      const res = await fetch(`${API_BASE}/api/patients`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -202,7 +203,7 @@ export default function PatientsPage() {
   const handleDeletePatient = async (id: string, name: string) => {
     // If the backend has delete, call it. Else show simulated deletion.
     try {
-      const res = await fetch(`http://localhost:5001/api/patients/${id}`, {
+      const res = await fetch(`${API_BASE}/api/patients/${id}`, {
         method: "DELETE"
       });
       if (res.ok) {

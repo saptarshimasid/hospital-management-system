@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { SearchContext } from "../layout";
@@ -77,7 +78,7 @@ export default function ReportsPage() {
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5001/api/reports");
+      const res = await fetch(`${API_BASE}/api/reports`);
       if (res.ok) {
         const data = await res.json();
         setReports(data.map((r: any) => ({
@@ -195,7 +196,7 @@ export default function ReportsPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/reports", {
+      const res = await fetch(`${API_BASE}/api/reports`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

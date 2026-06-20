@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { SearchContext } from "../layout";
@@ -150,7 +151,7 @@ export default function AppointmentsPage() {
 
   async function fetchAppointments() {
     try {
-      const res = await fetch("http://localhost:5001/api/appointments");
+      const res = await fetch(`${API_BASE}/api/appointments`);
       if (res.ok) {
         const data = await res.json();
         setAppointments(data.map((item: any) => ({
@@ -240,7 +241,7 @@ export default function AppointmentsPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/appointments", {
+      const res = await fetch(`${API_BASE}/api/appointments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -267,7 +268,7 @@ export default function AppointmentsPage() {
 
   const handleStatusChange = async (id: string, newStatus: "confirmed" | "completed" | "cancelled") => {
     try {
-      const res = await fetch(`http://localhost:5001/api/appointments/${id}/status`, {
+      const res = await fetch(`${API_BASE}/api/appointments/${id}/status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
@@ -287,7 +288,7 @@ export default function AppointmentsPage() {
 
   const handleCancelAppointment = async (id: string, name: string) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/appointments/${id}`, {
+      const res = await fetch(`${API_BASE}/api/appointments/${id}`, {
         method: "DELETE"
       });
       if (!res.ok) throw new Error("Failed to delete appointment");

@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -128,7 +129,7 @@ export default function DoctorPage() {
   const fetchDoctors = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5001/api/doctors");
+      const res = await fetch(`${API_BASE}/api/doctors`);
       if (res.ok) {
         const data = await res.json();
         setDoctors(
@@ -170,7 +171,7 @@ export default function DoctorPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/doctors", {
+      const res = await fetch(`${API_BASE}/api/doctors`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -198,7 +199,7 @@ export default function DoctorPage() {
 
   const handleDeleteDoctor = async (id: string, name: string) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/doctors/${id}`, {
+      const res = await fetch(`${API_BASE}/api/doctors/${id}`, {
         method: "DELETE"
       });
       if (res.ok) {

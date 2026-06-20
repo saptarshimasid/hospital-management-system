@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { SearchContext } from "../layout";
@@ -79,7 +80,7 @@ export default function BedAvailabilityPage() {
 
   async function fetchBeds() {
     try {
-      const res = await fetch("http://localhost:5001/api/beds");
+      const res = await fetch(`${API_BASE}/api/beds`);
       if (res.ok) {
         const data = await res.json();
         setBeds(data.map((item: any) => ({
@@ -131,7 +132,7 @@ export default function BedAvailabilityPage() {
 
   const handleDischarge = async (bedId: string) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/beds/${bedId}/discharge`, {
+      const res = await fetch(`${API_BASE}/api/beds/${bedId}/discharge`, {
         method: "POST"
       });
       if (!res.ok) throw new Error("Failed to discharge bed");
@@ -145,7 +146,7 @@ export default function BedAvailabilityPage() {
 
   const handleCompleteCleaning = async (bedId: string) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/beds/${bedId}/clean`, {
+      const res = await fetch(`${API_BASE}/api/beds/${bedId}/clean`, {
         method: "POST"
       });
       if (!res.ok) throw new Error("Failed to complete cleaning");
@@ -175,7 +176,7 @@ export default function BedAvailabilityPage() {
     };
 
     try {
-      const res = await fetch(`http://localhost:5001/api/beds/${selectedBedId}/reserve`, {
+      const res = await fetch(`${API_BASE}/api/beds/${selectedBedId}/reserve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

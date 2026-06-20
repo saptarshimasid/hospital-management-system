@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { SearchContext } from "../layout";
@@ -138,7 +139,7 @@ export default function BillingPage() {
 
   async function fetchInvoices() {
     try {
-      const res = await fetch("http://localhost:5001/api/invoices");
+      const res = await fetch(`${API_BASE}/api/invoices`);
       if (res.ok) {
         const data = await res.json();
         setInvoices(data.map((item: any) => ({
@@ -208,7 +209,7 @@ export default function BillingPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/invoices", {
+      const res = await fetch(`${API_BASE}/api/invoices`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useState, useEffect, useRef, createContext } from "react";
 import { usePathname } from "next/navigation";
@@ -58,7 +59,7 @@ export default function DashboardLayout({
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch("http://localhost:5001/api/notifications");
+      const res = await fetch(`${API_BASE}/api/notifications`);
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.map((n: any) => ({ ...n, id: n._id || n.id })));
@@ -86,7 +87,7 @@ export default function DashboardLayout({
 
   const markAllAsRead = async () => {
     try {
-      const res = await fetch("http://localhost:5001/api/notifications/read-all", {
+      const res = await fetch(`${API_BASE}/api/notifications/read-all`, {
         method: "PUT"
       });
       if (res.ok) {
@@ -99,7 +100,7 @@ export default function DashboardLayout({
 
   const markAsRead = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/notifications/${id}`, {
+      const res = await fetch(`${API_BASE}/api/notifications/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ read: true })

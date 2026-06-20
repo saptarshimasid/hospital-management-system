@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { SearchContext } from "../layout";
@@ -99,7 +100,7 @@ export default function RevenuePage() {
 
   async function fetchTransactions() {
     try {
-      const res = await fetch("http://localhost:5001/api/transactions");
+      const res = await fetch(`${API_BASE}/api/transactions`);
       if (res.ok) {
         const data = await res.json();
         setTransactions(data.map((item: any) => ({
@@ -168,7 +169,7 @@ export default function RevenuePage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/transactions", {
+      const res = await fetch(`${API_BASE}/api/transactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -198,7 +199,7 @@ export default function RevenuePage() {
 
   const handleRefund = async (id: string, amount: number) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/transactions/${id}`, {
+      const res = await fetch(`${API_BASE}/api/transactions/${id}`, {
         method: "DELETE"
       });
       if (!res.ok) throw new Error("Failed to refund transaction");

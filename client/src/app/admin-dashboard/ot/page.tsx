@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { SearchContext } from "../layout";
@@ -132,7 +133,7 @@ export default function OTPage() {
 
   async function fetchSurgeries() {
     try {
-      const res = await fetch("http://localhost:5001/api/surgeries");
+      const res = await fetch(`${API_BASE}/api/surgeries`);
       if (res.ok) {
         const data = await res.json();
         setSurgeries(data.map((item: any) => ({
@@ -204,7 +205,7 @@ export default function OTPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/surgeries", {
+      const res = await fetch(`${API_BASE}/api/surgeries`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -232,7 +233,7 @@ export default function OTPage() {
 
   const changeCaseStatus = async (id: string, nextStatus: "in progress" | "completed") => {
     try {
-      const res = await fetch(`http://localhost:5001/api/surgeries/${id}/status`, {
+      const res = await fetch(`${API_BASE}/api/surgeries/${id}/status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: nextStatus })
@@ -274,7 +275,7 @@ export default function OTPage() {
 
   const cancelCase = async (id: string, patientName: string) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/surgeries/${id}`, {
+      const res = await fetch(`${API_BASE}/api/surgeries/${id}`, {
         method: "DELETE"
       });
       if (!res.ok) throw new Error("Failed to delete surgery case");

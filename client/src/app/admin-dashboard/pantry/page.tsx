@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -125,7 +126,7 @@ export default function PantryPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5001/api/pantry");
+      const res = await fetch(`${API_BASE}/api/pantry`);
       if (res.ok) {
         const data = await res.json();
         setOrders(
@@ -156,7 +157,7 @@ export default function PantryPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/pantry", {
+      const res = await fetch(`${API_BASE}/api/pantry`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -183,7 +184,7 @@ export default function PantryPage() {
 
   const handleStatusChange = async (id: string, newStatus: "Pending" | "Preparing" | "Delivered") => {
     try {
-      const res = await fetch(`http://localhost:5001/api/pantry/${id}`, {
+      const res = await fetch(`${API_BASE}/api/pantry/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
@@ -200,7 +201,7 @@ export default function PantryPage() {
 
   const handleDeleteOrder = async (id: string, room: string) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/pantry/${id}`, {
+      const res = await fetch(`${API_BASE}/api/pantry/${id}`, {
         method: "DELETE"
       });
       if (res.ok) {

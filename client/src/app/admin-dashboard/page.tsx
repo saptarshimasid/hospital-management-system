@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { useRouter } from "next/navigation";
@@ -100,7 +101,7 @@ export default function Dashboard() {
 
   async function fetchMetrics() {
     try {
-      const res = await fetch("http://localhost:5001/api/metrics");
+      const res = await fetch(`${API_BASE}/api/metrics`);
       const data = await res.json();
       setMetrics(data);
     } catch (err) {
@@ -204,7 +205,7 @@ export default function Dashboard() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/patients", {
+      const res = await fetch(`${API_BASE}/api/patients`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -119,7 +120,7 @@ export default function DiagnosisPage() {
   const fetchDiagnoses = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5001/api/diagnoses");
+      const res = await fetch(`${API_BASE}/api/diagnoses`);
       if (res.ok) {
         const data = await res.json();
         setDiagnoses(
@@ -152,7 +153,7 @@ export default function DiagnosisPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/diagnoses", {
+      const res = await fetch(`${API_BASE}/api/diagnoses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -180,7 +181,7 @@ export default function DiagnosisPage() {
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to remove the diagnostic log for ${name}?`)) return;
     try {
-      const res = await fetch(`http://localhost:5001/api/diagnoses/${id}`, {
+      const res = await fetch(`${API_BASE}/api/diagnoses/${id}`, {
         method: "DELETE"
       });
       if (res.ok) {

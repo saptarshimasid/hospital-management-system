@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
  
 import { useState, useRef, useEffect } from "react";
 import { Send, Sparkles, AlertCircle, HelpCircle, Activity, X } from "lucide-react";
@@ -57,7 +58,7 @@ export default function CopilotChat() {
         content: m.content,
       }));
  
-      const res = await fetch("http://localhost:5001/api/chat", {
+      const res = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: userPrompt, history: historyPayload }),

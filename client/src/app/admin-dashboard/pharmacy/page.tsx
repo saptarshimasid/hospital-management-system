@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { SearchContext } from "../layout";
@@ -121,8 +122,8 @@ export default function PharmacyPage() {
 
   async function fetchPharmacyData() {
     try {
-      const medRes = await fetch("http://localhost:5001/api/medications");
-      const rxRes = await fetch("http://localhost:5001/api/prescriptions");
+      const medRes = await fetch(`${API_BASE}/api/medications`);
+      const rxRes = await fetch(`${API_BASE}/api/prescriptions`);
       
       if (medRes.ok && rxRes.ok) {
         const medsData = await medRes.json();
@@ -214,7 +215,7 @@ export default function PharmacyPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/medications", {
+      const res = await fetch(`${API_BASE}/api/medications`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -245,14 +246,14 @@ export default function PharmacyPage() {
       );
 
       if (matchingMed) {
-        await fetch(`http://localhost:5001/api/medications/${matchingMed.id}/dispense`, {
+        await fetch(`${API_BASE}/api/medications/${matchingMed.id}/dispense`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ quantity: dispenseQty })
         });
       }
 
-      await fetch(`http://localhost:5001/api/prescriptions/${rxId}/dispense`, {
+      await fetch(`${API_BASE}/api/prescriptions/${rxId}/dispense`, {
         method: "POST"
       });
 

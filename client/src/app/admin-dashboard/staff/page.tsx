@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/utils/api";
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -130,7 +131,7 @@ export default function StaffPage() {
   const fetchStaff = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5001/api/staff");
+      const res = await fetch(`${API_BASE}/api/staff`);
       if (res.ok) {
         const data = await res.json();
         setStaffList(
@@ -172,7 +173,7 @@ export default function StaffPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/staff", {
+      const res = await fetch(`${API_BASE}/api/staff`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -201,7 +202,7 @@ export default function StaffPage() {
 
   const handleDeleteStaff = async (id: string, name: string) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/staff/${id}`, {
+      const res = await fetch(`${API_BASE}/api/staff/${id}`, {
         method: "DELETE"
       });
       if (res.ok) {

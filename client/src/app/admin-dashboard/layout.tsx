@@ -88,7 +88,7 @@ export default function DashboardLayout({
   const markAllAsRead = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/notifications/read-all`, {
-        method: "PUT"
+        method: "POST"
       });
       if (res.ok) {
         fetchNotifications();

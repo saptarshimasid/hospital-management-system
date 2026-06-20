@@ -215,7 +215,7 @@ export default function Dashboard() {
       triggerToast("Patient Admitted", `Successfully created record for ${formPatientName}.`);
     } catch (err) {
       console.error(err);
-      triggerToast("Submission Error", "Failed to save patient to MongoDB.", "error");
+      triggerToast("Submission Error", "Failed to save patient to Database.", "error");
     }
 
     setShowModal(false);

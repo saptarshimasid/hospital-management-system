@@ -160,7 +160,7 @@ export default function AppointmentsPage() {
         })));
       }
     } catch (err) {
-      console.error("Failed to load appointments from MongoDB", err);
+      console.error("Failed to load appointments from Database", err);
     }
   }
 
@@ -251,7 +251,7 @@ export default function AppointmentsPage() {
       triggerToast("Appointment Scheduled", `Successfully booked consultation for ${formPatientName} with ${formDoctor}.`);
     } catch (err) {
       console.error(err);
-      triggerToast("Booking Error", "Failed to schedule appointment in MongoDB.", "error");
+      triggerToast("Booking Error", "Failed to schedule appointment in Database.", "error");
     }
 
     setShowModal(false);
@@ -282,7 +282,7 @@ export default function AppointmentsPage() {
       }
     } catch (err) {
       console.error(err);
-      triggerToast("Status Update Error", "Failed to update appointment in MongoDB.", "error");
+      triggerToast("Status Update Error", "Failed to update appointment in Database.", "error");
     }
   };
 
@@ -296,7 +296,7 @@ export default function AppointmentsPage() {
       triggerToast("Appointment Cancelled", `Consultation for ${name} was removed from the roster.`, "error");
     } catch (err) {
       console.error(err);
-      triggerToast("Cancel Error", "Failed to delete appointment from MongoDB.", "error");
+      triggerToast("Cancel Error", "Failed to delete appointment from Database.", "error");
     }
   };
 

@@ -148,7 +148,7 @@ export default function BillingPage() {
         })));
       }
     } catch (err) {
-      console.error("Failed to load invoices from MongoDB", err);
+      console.error("Failed to load invoices from Database", err);
     }
   }
 
@@ -236,7 +236,7 @@ export default function BillingPage() {
       }
     } catch (err) {
       console.error(err);
-      triggerToast("Submission Error", "Failed to save invoice in MongoDB.", "error");
+      triggerToast("Submission Error", "Failed to save invoice in Database.", "error");
     }
 
     setShowModal(false);

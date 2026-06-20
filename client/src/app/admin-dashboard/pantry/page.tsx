@@ -138,7 +138,7 @@ export default function PantryPage() {
       }
     } catch (err) {
       console.error("Failed to fetch pantry orders", err);
-      triggerToast("Network Error", "Could not retrieve pantry orders from MongoDB.", "error");
+      triggerToast("Network Error", "Could not retrieve pantry orders from Database.", "error");
     } finally {
       setLoading(false);
     }

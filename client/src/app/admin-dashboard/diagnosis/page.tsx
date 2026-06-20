@@ -132,7 +132,7 @@ export default function DiagnosisPage() {
       }
     } catch (err) {
       console.error("Failed to fetch diagnoses", err);
-      triggerToast("Network Error", "Could not retrieve diagnoses from MongoDB.", "error");
+      triggerToast("Network Error", "Could not retrieve diagnoses from Database.", "error");
     } finally {
       setLoading(false);
     }

@@ -89,7 +89,7 @@ export default function BedAvailabilityPage() {
         })));
       }
     } catch (err) {
-      console.error("Failed to load beds from MongoDB", err);
+      console.error("Failed to load beds from Database", err);
     }
   }
 
@@ -140,7 +140,7 @@ export default function BedAvailabilityPage() {
       triggerToast("Patient Discharged", `Bed ${bedId} queued for sanitation.`);
     } catch (err) {
       console.error(err);
-      triggerToast("Discharge Error", "Failed to update bed status in MongoDB.", "error");
+      triggerToast("Discharge Error", "Failed to update bed status in Database.", "error");
     }
   };
 
@@ -154,7 +154,7 @@ export default function BedAvailabilityPage() {
       triggerToast("Sanitization Complete", `Bed ${bedId} is sterile and available for intake.`);
     } catch (err) {
       console.error(err);
-      triggerToast("Cleaning Error", "Failed to update bed status in MongoDB.", "error");
+      triggerToast("Cleaning Error", "Failed to update bed status in Database.", "error");
     }
   };
 
@@ -186,7 +186,7 @@ export default function BedAvailabilityPage() {
       triggerToast("Bed Reserved", `Allocated bed ${selectedBedId} to patient ${formPatientName}.`);
     } catch (err) {
       console.error(err);
-      triggerToast("Reservation Error", "Failed to update bed in MongoDB.", "error");
+      triggerToast("Reservation Error", "Failed to update bed in Database.", "error");
     }
 
     // Reset Form & Close Modal

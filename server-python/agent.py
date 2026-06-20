@@ -7,7 +7,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
-from pymongo import MongoClient
+import psycopg2
 
 # Define Agent State
 class AgentState(TypedDict):
@@ -20,47 +20,40 @@ class AgentState(TypedDict):
 gemini_model = ChatGoogleGenerativeAI(model="gemini-3.5-flash", temperature=0.2, max_retries=1)
 openai_model = gemini_model
 
-# Initialize MongoDB & local vector search collection
-mongo_client = MongoClient(os.getenv("MONGODB_URI", "mongodb://127.0.0.1:27017"))
-db = mongo_client["health_copilot"]
-vector_collection = db["chat_vectors"]
+def get_db_connection():
+    db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres")
+    return psycopg2.connect(db_url)
 
 # Initialize Google Generative AI Embeddings
 embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 
-def cosine_similarity(v1, v2):
-    dot_product = sum(x * y for x, y in zip(v1, v2))
-    magnitude_v1 = sum(x * x for x in v1) ** 0.5
-    magnitude_v2 = sum(y * y for y in v2) ** 0.5
-    if not magnitude_v1 or not magnitude_v2:
-        return 0.0
-    return dot_product / (magnitude_v1 * magnitude_v2)
-
 def get_relevant_context(query: str, limit: int = 1) -> str:
     try:
         query_vector = embeddings.embed_query(query)
-        docs = list(vector_collection.find({"embedding": {"$exists": True}}))
-        if not docs:
-            return ""
-            
-        results = []
-        for doc in docs:
-            sim = cosine_similarity(query_vector, doc["embedding"])
-            results.append((sim, doc))
-            
-        results.sort(key=lambda x: x[0], reverse=True)
-        relevant_docs = results[:limit]
+        vector_str = f"[{','.join(map(str, query_vector))}]"
         
-        context_parts = []
-        for sim, doc in relevant_docs:
-            if sim > 0.65: # set reasonable threshold for similarity
-                context_parts.append(
-                    f"Previous Query (Similarity: {sim:.2f}):\n"
-                    f"User: {doc['prompt']}\n"
-                    f"AI: {doc['response']}\n"
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT prompt, response, category, 1 - (embedding <=> %s::vector) AS similarity "
+                    "FROM chat_vectors "
+                    "WHERE embedding IS NOT NULL AND (embedding <=> %s::vector) < 0.35 "
+                    "ORDER BY embedding <=> %s::vector "
+                    "LIMIT %s",
+                    (vector_str, vector_str, vector_str, limit)
                 )
-        if context_parts:
-            return "\n=== RELEVANT HISTORICAL AI CONTEXT ===\n" + "\n".join(context_parts) + "\n=======================================\n"
+                rows = cur.fetchall()
+                
+                context_parts = []
+                for row in rows:
+                    prompt_val, response_val, category_val, sim = row
+                    context_parts.append(
+                        f"Previous Query (Similarity: {sim:.2f}):\n"
+                        f"User: {prompt_val}\n"
+                        f"AI: {response_val}\n"
+                    )
+                if context_parts:
+                    return "\n=== RELEVANT HISTORICAL AI CONTEXT ===\n" + "\n".join(context_parts) + "\n=======================================\n"
     except Exception as e:
         print(f"[VectorDB] Similarity search error: {e}", flush=True)
     return ""
@@ -256,17 +249,20 @@ def run_copilot(prompt: str, chat_history: List[BaseMessage] = None) -> Dict[str
     result = graph.invoke(inputs)
     response_text = result.get("final_response", "")
 
-    # Save to MongoDB local Vector collection
+    # Save to Supabase pgvector collection
     try:
         if response_text:
             vector = embeddings.embed_query(prompt)
-            vector_collection.insert_one({
-                "prompt": prompt,
-                "response": response_text,
-                "category": result.get("category"),
-                "embedding": vector
-            })
-            print("[VectorDB] Inserted Q&A vector into MongoDB collection", flush=True)
+            vector_str = f"[{','.join(map(str, vector))}]"
+            with get_db_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "INSERT INTO chat_vectors (prompt, response, category, embedding) "
+                        "VALUES (%s, %s, %s, %s::vector)",
+                        (prompt, response_text, result.get("category"), vector_str)
+                    )
+                conn.commit()
+            print("[VectorDB] Inserted Q&A vector into Supabase chat_vectors", flush=True)
     except Exception as e:
         print(f"[VectorDB] Save vector error: {e}", flush=True)
 

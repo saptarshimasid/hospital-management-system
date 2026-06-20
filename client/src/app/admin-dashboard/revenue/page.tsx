@@ -109,7 +109,7 @@ export default function RevenuePage() {
         })));
       }
     } catch (err) {
-      console.error("Failed to load transactions from MongoDB", err);
+      console.error("Failed to load transactions from Database", err);
     }
   }
 
@@ -181,7 +181,7 @@ export default function RevenuePage() {
       triggerToast("Transaction Logged", `Voucher ${savedTxn._id || randomTxnId} for $${amt.toLocaleString()} logged.`);
     } catch (err) {
       console.error(err);
-      triggerToast("Logging Error", "Failed to log transaction in MongoDB.", "error");
+      triggerToast("Logging Error", "Failed to log transaction in Database.", "error");
     }
 
     setShowModal(false);
@@ -207,7 +207,7 @@ export default function RevenuePage() {
       triggerToast("Transaction Refunded", `Voucher ${id} for $${amount.toLocaleString()} has been fully refunded and closed.`, "error");
     } catch (err) {
       console.error(err);
-      triggerToast("Refund Error", "Failed to refund transaction in MongoDB.", "error");
+      triggerToast("Refund Error", "Failed to refund transaction in Database.", "error");
     }
   };
 

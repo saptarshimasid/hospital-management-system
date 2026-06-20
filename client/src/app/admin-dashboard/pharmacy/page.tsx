@@ -144,7 +144,7 @@ export default function PharmacyPage() {
         );
       }
     } catch (err) {
-      console.error("Failed to load pharmacy data from MongoDB", err);
+      console.error("Failed to load pharmacy data from Database", err);
     }
   }
 
@@ -225,7 +225,7 @@ export default function PharmacyPage() {
       triggerToast("Medication Registered", `Successfully registered ${qty} units of ${formDrugName}.`);
     } catch (err) {
       console.error(err);
-      triggerToast("Registration Error", "Failed to register medication in MongoDB.", "error");
+      triggerToast("Registration Error", "Failed to register medication in Database.", "error");
     }
 
     setShowModal(false);
@@ -261,7 +261,7 @@ export default function PharmacyPage() {
       triggerToast("Prescription Dispensed", `Dispensed ${dispenseQty} units of ${drugName} successfully.`);
     } catch (err) {
       console.error(err);
-      triggerToast("Dispense Error", "Failed to dispense prescription in MongoDB.", "error");
+      triggerToast("Dispense Error", "Failed to dispense prescription in Database.", "error");
     }
   };
 

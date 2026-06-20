@@ -142,7 +142,7 @@ export default function OTPage() {
         })));
       }
     } catch (err) {
-      console.error("Failed to load surgeries from MongoDB", err);
+      console.error("Failed to load surgeries from Database", err);
     }
   }
 
@@ -215,7 +215,7 @@ export default function OTPage() {
       triggerToast("Procedure Scheduled", `Successfully scheduled surgery for ${formPatientName} with ${formSurgeon}.`);
     } catch (err) {
       console.error(err);
-      triggerToast("Booking Error", "Failed to schedule surgery in MongoDB.", "error");
+      triggerToast("Booking Error", "Failed to schedule surgery in Database.", "error");
     }
 
     setShowModal(false);
@@ -269,7 +269,7 @@ export default function OTPage() {
       }
     } catch (err) {
       console.error(err);
-      triggerToast("Status Error", "Failed to update surgery in MongoDB.", "error");
+      triggerToast("Status Error", "Failed to update surgery in Database.", "error");
     }
   };
 
@@ -283,7 +283,7 @@ export default function OTPage() {
       triggerToast("Case Cancelled", `Surgery for ${patientName} was cancelled and removed.`, "error");
     } catch (err) {
       console.error(err);
-      triggerToast("Cancellation Error", "Failed to remove surgery from MongoDB.", "error");
+      triggerToast("Cancellation Error", "Failed to remove surgery from Database.", "error");
     }
   };
 

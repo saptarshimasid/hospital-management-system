@@ -88,7 +88,7 @@ export default function ReportsPage() {
       }
     } catch (err) {
       console.error("Failed to fetch reports", err);
-      triggerToast("Network Error", "Could not fetch reports from MongoDB.", "error");
+      triggerToast("Network Error", "Could not fetch reports from Database.", "error");
     } finally {
       setLoading(false);
     }
@@ -203,11 +203,11 @@ export default function ReportsPage() {
       });
       if (!res.ok) throw new Error("Failed to generate report");
       
-      triggerToast("Report Generated", `Draft for "${formReportName}" has been saved to MongoDB.`);
+      triggerToast("Report Generated", `Draft for "${formReportName}" has been saved to Database.`);
       await fetchReports();
     } catch (err) {
       console.error(err);
-      triggerToast("Error Generating Report", "Could not save report to MongoDB.", "error");
+      triggerToast("Error Generating Report", "Could not save report to Database.", "error");
     }
 
     setShowModal(false);
@@ -376,7 +376,7 @@ export default function ReportsPage() {
               </div>
             ) : filteredReports.length === 0 ? (
               <div className="text-center py-20 text-on-surface-variant/60 text-xs">
-                No matching telemetry reports found in MongoDB.
+                No matching telemetry reports found in Database.
               </div>
             ) : (
               <table className="w-full text-left border-collapse text-xs">

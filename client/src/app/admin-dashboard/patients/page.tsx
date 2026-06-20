@@ -238,7 +238,7 @@ export default function PatientsPage() {
   });
 
   // Calculate Metrics
-  const totalPatients = 12482 + patients.length;
+  const totalPatients = patients.length;
   const malePatients = patients.filter(p => p.gender?.toLowerCase() === "male").length;
   const femalePatients = patients.filter(p => p.gender?.toLowerCase() === "female").length;
   const criticalPatients = patients.filter(p => p.status?.toLowerCase() === "urgent").length;

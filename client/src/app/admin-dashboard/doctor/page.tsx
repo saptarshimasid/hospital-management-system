@@ -235,10 +235,10 @@ export default function DoctorPage() {
   });
 
   // Calculate Metrics
-  const totalDoctors = 156 + doctors.length;
-  const availableDoctors = doctors.filter(d => d.status === "available").length + 2; // mock add offset
-  const busyDoctors = doctors.filter(d => d.status === "busy").length + 1;
-  const consultingDoctors = doctors.filter(d => d.status === "consulting").length + 1;
+  const totalDoctors = doctors.length;
+  const availableDoctors = doctors.filter(d => d.status === "available").length;
+  const busyDoctors = doctors.filter(d => d.status === "busy").length;
+  const consultingDoctors = doctors.filter(d => d.status === "consulting").length;
 
   const getStatusStyle = (status: string) => {
     switch (status) {

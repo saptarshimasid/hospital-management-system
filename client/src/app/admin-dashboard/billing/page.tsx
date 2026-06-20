@@ -50,63 +50,8 @@ interface ToastMessage {
 }
 
 export default function BillingPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>([
-    {
-      id: "INV-9021",
-      patientName: "Arthur Morgan",
-      dept: "Cardiology",
-      services: "Coronary Angioplasty",
-      amount: 12400,
-      date: "2024-02-20",
-      status: "Paid",
-    },
-    {
-      id: "INV-8912",
-      patientName: "Elena Fisher",
-      dept: "Gen Medicine",
-      services: "Inpatient Ward Stay (2 Days)",
-      amount: 1850,
-      date: "2024-02-23",
-      status: "Pending",
-    },
-    {
-      id: "INV-4412",
-      patientName: "Joel Miller",
-      dept: "Emergency",
-      services: "Trauma Resuscitation & Stitching",
-      amount: 4200,
-      date: "2024-02-10",
-      status: "Overdue",
-    },
-    {
-      id: "INV-1092",
-      patientName: "Leo Vance",
-      dept: "Neurology",
-      services: "MRI Brain & EEG Telemetry",
-      amount: 3150,
-      date: "2024-02-22",
-      status: "Paid",
-    },
-  ]);
-
-  const [claims, setClaims] = useState<Claim[]>([
-    {
-      id: "CLM-2001",
-      invoiceId: "INV-8912",
-      patientName: "Elena Fisher",
-      provider: "BlueCross PPO",
-      amount: 1850,
-      status: "Ready",
-    },
-    {
-      id: "CLM-2002",
-      invoiceId: "INV-4412",
-      patientName: "Joel Miller",
-      provider: "Aetna Health",
-      amount: 4200,
-      status: "Ready",
-    },
-  ]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [claims, setClaims] = useState<Claim[]>([]);
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { searchQuery, setSearchQuery } = useContext(SearchContext);

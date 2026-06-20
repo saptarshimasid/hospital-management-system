@@ -48,63 +48,8 @@ interface ToastMessage {
 }
 
 export default function PharmacyPage() {
-  const [medications, setMedications] = useState<Medication[]>([
-    {
-      id: "med-1",
-      name: "Acetaminophen (Tylenol)",
-      sku: "SKU-29381",
-      category: "Analgesic",
-      dosage: "500mg",
-      quantity: 320,
-      status: "In Stock",
-    },
-    {
-      id: "med-2",
-      name: "Amoxicillin",
-      sku: "SKU-88291",
-      category: "Antibiotic",
-      dosage: "250mg",
-      quantity: 45,
-      status: "Low Stock",
-    },
-    {
-      id: "med-3",
-      name: "Atorvastatin (Lipitor)",
-      sku: "SKU-44321",
-      category: "Cardiovascular",
-      dosage: "20mg",
-      quantity: 180,
-      status: "In Stock",
-    },
-    {
-      id: "med-4",
-      name: "Albuterol Inhaler",
-      sku: "SKU-10928",
-      category: "Respiratory",
-      dosage: "90mcg",
-      quantity: 0,
-      status: "Out of Stock",
-    },
-  ]);
-
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>([
-    {
-      id: "Rx-9921",
-      patientName: "Arthur Morgan",
-      drug: "Acetaminophen (Tylenol)",
-      dosage: "500mg",
-      quantity: 10,
-      status: "pending",
-    },
-    {
-      id: "Rx-9922",
-      patientName: "Elena Fisher",
-      drug: "Amoxicillin",
-      dosage: "250mg",
-      quantity: 15,
-      status: "pending",
-    },
-  ]);
+  const [medications, setMedications] = useState<Medication[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { searchQuery, setSearchQuery } = useContext(SearchContext);
@@ -162,7 +107,7 @@ export default function PharmacyPage() {
   const totalMedications = medications.length;
   const lowStockCount = medications.filter((m) => m.quantity > 0 && m.quantity < 50).length;
   const pendingRx = prescriptions.filter((r) => r.status === "pending").length;
-  const dispatchedToday = 84 + prescriptions.filter((r) => r.status === "completed").length;
+  const dispatchedToday = prescriptions.filter((r) => r.status === "completed").length;
 
   useEffect(() => {
     if (statsContainerRef.current) {

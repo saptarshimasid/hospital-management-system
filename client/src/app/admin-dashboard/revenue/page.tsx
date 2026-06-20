@@ -42,32 +42,7 @@ interface ToastMessage {
 }
 
 export default function RevenuePage() {
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    {
-      id: "TXN-00129",
-      patientName: "Arthur Morgan",
-      type: "Insurance",
-      amount: 11160,
-      method: "ACH Transfer",
-      date: "2024-02-23",
-    },
-    {
-      id: "TXN-00130",
-      patientName: "Elena Fisher",
-      type: "Copay",
-      amount: 35,
-      method: "Credit Card",
-      date: "2024-02-24",
-    },
-    {
-      id: "TXN-00131",
-      patientName: "Joel Miller",
-      type: "Direct",
-      amount: 1200,
-      method: "Direct Debit",
-      date: "2024-02-18",
-    },
-  ]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { searchQuery, setSearchQuery } = useContext(SearchContext);
@@ -114,9 +89,9 @@ export default function RevenuePage() {
   }
 
   // Stats calculations
-  const totalYTD = 1240000 + transactions.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalYTD = transactions.reduce((acc, curr) => acc + curr.amount, 0);
   const avgTxn = Math.round(transactions.reduce((acc, curr) => acc + curr.amount, 0) / (transactions.length || 1));
-  const copaysCount = 84 + transactions.filter((t) => t.type === "Copay").length;
+  const copaysCount = transactions.filter((t) => t.type === "Copay").length;
 
   useEffect(() => {
     if (statsContainerRef.current) {
@@ -269,7 +244,9 @@ export default function RevenuePage() {
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">YTD Revenue</p>
-            <h3 className="text-xl font-bold mt-1">${(totalYTD / 1000000).toFixed(2)}M</h3>
+            <h3 className="text-xl font-bold mt-1">
+              {totalYTD >= 1000000 ? `$${(totalYTD / 1000000).toFixed(2)}M` : `$${totalYTD.toLocaleString()}`}
+            </h3>
           </div>
         </div>
 

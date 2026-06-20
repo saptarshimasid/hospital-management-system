@@ -103,9 +103,9 @@ export default function ReportsPage() {
   }, []);
 
   // Stats calculation
-  const clinicalAudits = 124;
+  const clinicalAudits = reports.filter((r) => r.category === "Clinical").length;
   const systemUptime = "99.98%";
-  const reportsExported = 342 + reports.filter((r) => r.id.startsWith("exported-")).length;
+  const reportsExported = reports.filter((r) => r.id.startsWith("exported-")).length;
   const pendingReviews = reports.length;
 
   useEffect(() => {

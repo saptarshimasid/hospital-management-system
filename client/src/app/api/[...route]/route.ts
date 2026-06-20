@@ -126,31 +126,71 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
       const patientsCount = await Patient.countDocuments();
       const activeBeds = await Bed.countDocuments({ status: 'occupied' });
       const cleaningBeds = await Bed.countDocuments({ status: 'cleaning' });
-      const totalBeds = await Bed.countDocuments() || 250;
+      const totalBeds = await Bed.countDocuments() || 12;
       const recentPatientsList = await Patient.find().sort({ createdAt: -1 }).limit(10);
       const txns = await Transaction.find();
+      
       const totalRevenue = txns.reduce((acc: number, curr: any) => acc + parseFloat(curr.amount || 0), 0);
       const doctorsCount = await Doctor.countDocuments();
       const staffCount = await Staff.countDocuments();
 
+      // Calculate weekly revenue from actual transactions in last 7 days
+      const weeklyRevenue = txns.filter((t: any) => {
+        const txnDate = new Date(t.date);
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        return txnDate >= oneWeekAgo;
+      }).reduce((acc: number, curr: any) => acc + parseFloat(curr.amount || 0), 0);
+
+      // Calculate last 6 months revenue for chart
+      const monthlyRevenue = [0, 0, 0, 0, 0, 0];
+      const nowMonth = new Date().getMonth();
+      const nowYear = new Date().getFullYear();
+      for (const t of txns) {
+        const tDate = new Date(t.date);
+        const tMonth = tDate.getMonth();
+        const tYear = tDate.getFullYear();
+        const monthDiff = (nowYear - tYear) * 12 + (nowMonth - tMonth);
+        if (monthDiff >= 0 && monthDiff < 6) {
+          monthlyRevenue[5 - monthDiff] += parseFloat(t.amount || 0);
+        }
+      }
+
+      // Calculate departments case volume dynamically from appointments
+      const totalAppts = await Appointment.countDocuments();
+      let cardVal = 0, neuroVal = 0, pedsVal = 0, oncVal = 0, erVal = 0;
+      if (totalAppts > 0) {
+        cardVal = Math.round((await Appointment.countDocuments({ dept: 'Cardiology' }) / totalAppts) * 100);
+        neuroVal = Math.round((await Appointment.countDocuments({ dept: 'Neurology' }) / totalAppts) * 100);
+        pedsVal = Math.round((await Appointment.countDocuments({ dept: 'Pediatrics' }) / totalAppts) * 100);
+        oncVal = Math.round((await Appointment.countDocuments({ dept: 'Oncology' }) / totalAppts) * 100);
+        erVal = Math.round(((await Appointment.countDocuments({ dept: 'Emergency' }) + await Appointment.countDocuments({ dept: 'ER' })) / totalAppts) * 100);
+      }
+
       return NextResponse.json({
         stats: {
-          totalPatients: { value: (12482 + patientsCount).toLocaleString(), change: '+12%', type: 'up' },
-          totalDoctors: { value: (156 + doctorsCount).toString(), change: null, type: null },
-          totalStaff: { value: (482 + staffCount).toString(), change: null, type: null },
-          weeklyRevenue: { value: `$${((1200000 + totalRevenue) / 1000000).toFixed(1)}M`, change: '+8%', type: 'up' },
+          totalPatients: { value: patientsCount.toLocaleString(), change: null, type: null },
+          totalDoctors: { value: doctorsCount.toString(), change: null, type: null },
+          totalStaff: { value: staffCount.toString(), change: null, type: null },
+          weeklyRevenue: { 
+            value: weeklyRevenue >= 1000000 
+              ? `$${(weeklyRevenue / 1000000).toFixed(2)}M` 
+              : `$${weeklyRevenue.toLocaleString()}`, 
+            change: null, 
+            type: null 
+          },
           bedAvailability: { 
             value: `${totalBeds - activeBeds - cleaningBeds} / ${totalBeds}`, 
-            status: (activeBeds / totalBeds) > 0.9 ? 'Critical' : 'Stable', 
-            occupancyRate: `${((activeBeds / totalBeds) * 100).toFixed(1)}%` 
+            status: totalBeds > 0 && (activeBeds / totalBeds) > 0.9 ? 'Critical' : 'Stable', 
+            occupancyRate: totalBeds > 0 ? `${((activeBeds / totalBeds) * 100).toFixed(1)}%` : '0%'
           }
         },
         departments: [
-          { name: 'Cardiology', value: 84 },
-          { name: 'Neurology', value: 62 },
-          { name: 'Pediatrics', value: 91 },
-          { name: 'Oncology', value: 45 },
-          { name: 'ER', value: 98 }
+          { name: 'Cardiology', value: cardVal },
+          { name: 'Neurology', value: neuroVal },
+          { name: 'Pediatrics', value: pedsVal },
+          { name: 'Oncology', value: oncVal },
+          { name: 'ER', value: erVal }
         ],
         recentPatients: recentPatientsList.map((p: any) => ({
           id: p._id.toString().substring(18).toUpperCase(),
@@ -168,7 +208,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
           { name: 'Nurse Jack Reed', role: 'ER Duty', time: '10:00 - 22:00', active: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbqlNGf-UBP_bmKLEIHXW5ME0N4fUpm-v4zHLxw-AmDgCJcabHGydiLTCy6hNGWmJdjUG2Td1Pt9q2Aw-lKECxeJVxN_0eZcz_f7hGkM2DAjMRLYSKQzSgUiwCRmZHxfOuYFzGIIoB-OB9nRffi34kZ3fB50Sy-HQhFlaJBt2FVqEC-pPcYRk0twUKXpVD8hd9OLV_k5TDjnwMC_t4Dsq-OQIKd5qGhX16CSZekIV6YjEIkL1vZCC-fh5BFS_EcDuhWnna0oGZHbU' },
           { name: 'Dr. Helena Troy', role: 'On Call', time: '24H', active: true, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBUR93vsX8-PeJEf1vGo8anymPqpciIEu9_x9IjqrdZVQwRFInWdZrZh6EzF98zhcTAmu_qo75Zgq62h2u1qhebSvRpv8x9AdnDALYA2yPyr7nokvD2GDDZcOQynWOdukWkeiebcJhfXbKTWxTKwBvrfayAZQVJWFzwXqW01XzNzkzLnGnX6VWvfWZzXmROwFxKzACpOmHaTRUfrTcmj9buFrYebCfW0MG8AUWnuLh0dNVA-DRbYj5WYsqfFohmMdu7i7c3SPhaaDI' },
           { name: 'Mark Stevens', role: 'Tech', time: 'Tomorrow 06:00', active: false, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3E3D4czQ2WyFUklLEShTpvakILDd2oKeW2gRacONc5PsddD7Zp-0koHPaE1dcs84hb9548ofn-d11m9p8S7breKKUZQ-Z9aYENF7P8cn8QomCfUEtZRIIHU4mw2Q-AN8jEg6SFyL4Jb1jBTBnJU8rbxe1UOxk1Wna-0E70nPywG7REgfFIjVmMQob1Q5Rxy5LcaaV1qTG6BdyvSijX-5K1EZI0BazLkMiXZ3kGOqDRrAbNRhmY0SOmrTCbWLYXutH0l8G7u5blZc' }
-        ]
+        ],
+        monthlyRevenue: monthlyRevenue
       });
     }
 

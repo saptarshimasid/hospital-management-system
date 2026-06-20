@@ -224,16 +224,6 @@ export default function DashboardLayout({
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="relative w-full max-w-[24rem]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4 opacity-60" />
-              <input
-                type="text"
-                placeholder="Search patients, medical records, or doctors..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#060e20]/60 border border-white/5 rounded-full py-2 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary/50 text-on-surface placeholder-on-surface-variant/40 focus:outline-none"
-              />
-            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative" ref={notificationRef}>

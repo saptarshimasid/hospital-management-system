@@ -51,58 +51,8 @@ interface ToastMessage {
 }
 
 export default function OTPage() {
-  const [surgeries, setSurgeries] = useState<SurgeryCase[]>([
-    {
-      id: "case-1",
-      room: "OT Suite 1",
-      patientName: "Arthur Morgan",
-      surgeon: "Dr. Aisha Khan",
-      procedure: "Coronary Bypass",
-      time: "08:00 - 12:30",
-      status: "in progress",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDmVsYcVmImeZHkXR5iUfIXPI5aazV4igMcaxMipsm2kMl5kuVusqoSIq-_yNJFvRtmx8XT825hAdfxKHm-uLdedCQx8UUlPTKptmJMQ2djWKfH3-GAkQcOrF3HxxoeEyJZQGfYd1IbXEdL0CnvJRvSHAnNzMaCI7UtJec2u2omFQCj1GWZZ2pRt9XNSCO4eoCRCrG-bXSl5ofe3yq-gt_OF0pG-A3Xnf-SFBpyhOtZip_ULAYFhioMcc4K9XMrYT3Q59FkV-OTwBw",
-    },
-    {
-      id: "case-2",
-      room: "OT Suite 3",
-      patientName: "Elena Fisher",
-      surgeon: "Dr. Sarah Jenkins",
-      procedure: "Appendectomy",
-      time: "10:00 - 11:30",
-      status: "in progress",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBDN3UVTzPzv0Af2e0RzKnIIEO4r9e__EQuYHMnJvh8UWv-6lnXFoZRlJKfi3IvG3LLUscX7j-SPCjcEm0KgmjBmAnhC72OshfvEi8pRB-SQCzdTNWkTSsMT7kZitjLz-d3s3iLxtJfFw-iLSvTcA9S0n-tUmzRtM2g-S0qOEN1qSdigBzn5aT2mtV550DjEN1kz_ZLg95eUGLgGJM4N9nVwt2TYQZfAYgh1xulrJwbYA7exPFK3j0QF1bsBBtzt0yyWHaVnLn9wik",
-    },
-    {
-      id: "case-3",
-      room: "OT Suite 2",
-      patientName: "Leo Vance",
-      surgeon: "Dr. Helena Troy",
-      procedure: "Craniotomy",
-      time: "01:30 - 04:30",
-      status: "scheduled",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzLc-0PWFHLrfwLUNgEq48dDtFLusQjORiJhyAfCUgvYExrc_n6uN6rkyJlK8Go7hirf_te7NG-fXD7XDbC2gCGoWXKCdkwl5DOrUlMVwbhj_OFawGKER3rxK1fs9605FDUh5HTfYITdo2tEHU_nEKhkQWf7FZ-pbWIXWfiiyTnaUqFGgOeG_2yOARP6sroNOt-E1ylF-DrJCdHkMoHImiKHjK3kAQ0HKnDU08iq7uKukIFsUGRNdex7d0xSkceUiMAnPVp6g5ecg",
-    },
-  ]);
-
-  const [surgeons, setSurgeons] = useState<Surgeon[]>([
-    {
-      name: "Dr. Aisha Khan",
-      status: "in-ot",
-      room: "OT Suite 1",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCxE0Kc-a84miM3cx60p-is_bmHfiuDni2VYTT13G7qH4EHo7VInDBPQf4KvsZEdoY4BjpC5ilIM2izkMM9QWnv942pBrRN6W5DJSpzZWc1zarDgsffmVC1fjLswQ3Bc-exrEkeyXHSvEfAXOGgX1IUEjt_u_EqScu7e0V96-bf-KRzX4MBcMGdyC-zZ8A7lhCflEHR03TY2y6IIxnexbbIGi_iBRgeYSOjnTIqtkcnQ8u3c9X_FAEKptPJrNL3bAtuyqgIJWLEi-g",
-    },
-    {
-      name: "Dr. Helena Troy",
-      status: "available",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBUR93vsX8-PeJEf1vGo8anymPqpciIEu9_x9IjqrdZVQwRFInWdZrZh6EzF98zhcTAmu_qo75Zgq62h2u1qhebSvRpv8x9AdnDALYA2yPyr7nokvD2GDDZcOQynWOdukWkeiebcJhfXbKTWxTKwBvrfayAZQVJWFzwXqW01XzNzkzLnGnX6VWvfWZzXmROwFxKzACpOmHaTRUfrTcmj9buFrYebCfW0MG8AUWnuLh0dNVA-DRbYj5WYsqfFohmMdu7i7c3SPhaaDI",
-    },
-    {
-      name: "Dr. Jack Reed",
-      status: "consultation",
-      room: "Ward B",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCbqlNGf-UBP_bmKLEIHXW5ME0N4fUpm-v4zHLxw-AmDgCJcabHGydiLTCy6hNGWmJdjUG2Td1Pt9q2Aw-lKECxeJVxN_0eZcz_f7hGkM2DAjMRLYSKQzSgUiwCRmZHxfOuYFzGIIoB-OB9nRffi34kZ3fB50Sy-HQhFlaJBt2FVqEC-pPcYRk0twUKXpVD8hd9OLV_k5TDjnwMC_t4Dsq-OQIKd5qGhX16CSZekIV6YjEIkL1vZCC-fh5BFS_EcDuhWnna0oGZHbU",
-    },
-  ]);
+  const [surgeries, setSurgeries] = useState<SurgeryCase[]>([]);
+  const [surgeons, setSurgeons] = useState<Surgeon[]>([]);
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { searchQuery, setSearchQuery } = useContext(SearchContext);
@@ -129,7 +79,24 @@ export default function OTPage() {
   useEffect(() => {
     setDisplayDate(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     fetchSurgeries();
+    fetchSurgeons();
   }, []);
+
+  async function fetchSurgeons() {
+    try {
+      const res = await fetch(`${API_BASE}/api/doctors`);
+      if (res.ok) {
+        const data = await res.json();
+        setSurgeons(data.map((item: any) => ({
+          name: item.name,
+          status: item.status === "busy" ? "in-ot" : item.status === "consulting" ? "consultation" : item.status,
+          img: item.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o"
+        })));
+      }
+    } catch (err) {
+      console.error("Failed to load surgeons from Database", err);
+    }
+  }
 
   async function fetchSurgeries() {
     try {
@@ -326,8 +293,8 @@ export default function OTPage() {
   // Stats calculation
   const totalProcedures = surgeries.length;
   const activeOTs = surgeries.filter((c) => c.status === "in progress").length;
-  const emergencyCases = surgeries.filter((c) => c.procedure.toLowerCase().includes("emergency") || c.procedure.toLowerCase().includes("trauma")).length || 2;
-  const surgeonsOnDuty = surgeons.length + 5; // Fixed mock addition
+  const emergencyCases = surgeries.filter((c) => c.procedure.toLowerCase().includes("emergency") || c.procedure.toLowerCase().includes("trauma")).length;
+  const surgeonsOnDuty = surgeons.filter(s => s.status !== "off-duty").length;
 
   return (
     <div className="space-y-8">

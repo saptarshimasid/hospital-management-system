@@ -239,9 +239,9 @@ export default function StaffPage() {
   });
 
   // Calculate Metrics
-  const totalStaff = 482 + staffList.length;
-  const activeStaff = staffList.filter(s => s.status === "active").length + 2; // mock add offset
-  const onLeaveStaff = staffList.filter(s => s.status === "on-leave").length + 1;
+  const totalStaff = staffList.length;
+  const activeStaff = staffList.filter(s => s.status === "active").length;
+  const onLeaveStaff = staffList.filter(s => s.status === "on-leave").length;
   const inactiveStaff = staffList.filter(s => s.status === "inactive").length;
 
   const getStatusStyle = (status: string) => {

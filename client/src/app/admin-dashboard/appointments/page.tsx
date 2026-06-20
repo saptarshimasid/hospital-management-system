@@ -50,75 +50,8 @@ interface ToastMessage {
 }
 
 export default function AppointmentsPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: "#PAT-8821",
-      name: "Arthur Morgan",
-      doctor: "Dr. Aisha Khan",
-      dept: "Cardiology",
-      time: "10:30 AM",
-      date: "2024-02-24",
-      status: "confirmed",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDmVsYcVmImeZHkXR5iUfIXPI5aazV4igMcaxMipsm2kMl5kuVusqoSIq-_yNJFvRtmx8XT825hAdfxKHm-uLdedCQx8UUlPTKptmJMQ2djWKfH3-GAkQcOrF3HxxoeEyJZQGfYd1IbXEdL0CnvJRvSHAnNzMaCI7UtJec2u2omFQCj1GWZZ2pRt9XNSCO4eoCRCrG-bXSl5ofe3yq-gt_OF0pG-A3Xnf-SFBpyhOtZip_ULAYFhioMcc4K9XMrYT3Q59FkV-OTwBw",
-    },
-    {
-      id: "#PAT-9012",
-      name: "Elena Fisher",
-      doctor: "Dr. Sarah Jenkins",
-      dept: "Gen Medicine",
-      time: "11:15 AM",
-      date: "2024-02-24",
-      status: "confirmed",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBDN3UVTzPzv0Af2e0RzKnIIEO4r9e__EQuYHMnJvh8UWv-6lnXFoZRlJKfi3IvG3LLUscX7j-SPCjcEm0KgmjBmAnhC72OshfvEi8pRB-SQCzdTNWkTSsMT7kZitjLz-d3s3iLxtJfFw-iLSvTcA9S0n-tUmzRtM2g-S0qOEN1qSdigBzn5aT2mtV550DjEN1kz_ZLg95eUGLgGJM4N9nVwt2TYQZfAYgh1xulrJwbYA7exPFK3j0QF1bsBBtzt0yyWHaVnLn9wik",
-    },
-    {
-      id: "#PAT-4432",
-      name: "Joel Miller",
-      doctor: "Dr. Jack Reed",
-      dept: "Emergency",
-      time: "12:00 PM",
-      date: "2024-02-24",
-      status: "completed",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuA23_Q91hh10bCN4f7gJMFJprKGgpdptxHMK6c2eIhhcE7Q1TwIjwKEdPjyA9YYKSl032mfuO_o3N6s9MQFH4wr0DGj2Us5Wp0mJFGwNWwhDCBhrD0RbRv1QbKMm8J2aKhnnm1_ZAcm530LQcyGmWwAtM2GziqffApwuWxx8-KpmpGPPZAucb8LNGMiTBmoS0xf4dEgNGrr--uC1FJxMybebjelAz2aB0FssgL75f3n8a9Tl3FPaC4cu6ASoSH5rEHOXQ85i2rHMq8",
-    },
-    {
-      id: "#PAT-1109",
-      name: "Leo Vance",
-      doctor: "Dr. Helena Troy",
-      dept: "Neurology",
-      time: "02:30 PM",
-      date: "2024-02-24",
-      status: "pending",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzLc-0PWFHLrfwLUNgEq48dDtFLusQjORiJhyAfCUgvYExrc_n6uN6rkyJlK8Go7hirf_te7NG-fXD7XDbC2gCGoWXKCdkwl5DOrUlMVwbhj_OFawGKER3rxK1fs9605FDUh5HTfYITdo2tEHU_nEKhkQWf7FZ-pbWIXWfiiyTnaUqFGgOeG_2yOARP6sroNOt-E1ylF-DrJCdHkMoHImiKHjK3kAQ0HKnDU08iq7uKukIFsUGRNdex7d0xSkceUiMAnPVp6g5ecg",
-    },
-  ]);
-
-  const [physicians] = useState<Physician[]>([
-    {
-      name: "Dr. Aisha Khan",
-      dept: "Cardiology",
-      status: "busy",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCxE0Kc-a84miM3cx60p-is_bmHfiuDni2VYTT13G7qH4EHo7VInDBPQf4KvsZEdoY4BjpC5ilIM2izkMM9QWnv942pBrRN6W5DJSpzZWc1zarDgsffmVC1fjLswQ3Bc-exrEkeyXHSvEfAXOGgX1IUEjt_u_EqScu7e0V96-bf-KRzX4MBcMGdyC-zZ8A7lhCflEHR03TY2y6IIxnexbbIGi_iBRgeYSOjnTIqtkcnQ8u3c9X_FAEKptPJrNL3bAtuyqgIJWLEi-g",
-    },
-    {
-      name: "Dr. Sarah Jenkins",
-      dept: "Gen Medicine",
-      status: "available",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o",
-    },
-    {
-      name: "Dr. Helena Troy",
-      dept: "Neurology",
-      status: "consulting",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBUR93vsX8-PeJEf1vGo8anymPqpciIEu9_x9IjqrdZVQwRFInWdZrZh6EzF98zhcTAmu_qo75Zgq62h2u1qhebSvRpv8x9AdnDALYA2yPyr7nokvD2GDDZcOQynWOdukWkeiebcJhfXbKTWxTKwBvrfayAZQVJWFzwXqW01XzNzkzLnGnX6VWvfWZzXmROwFxKzACpOmHaTRUfrTcmj9buFrYebCfW0MG8AUWnuLh0dNVA-DRbYj5WYsqfFohmMdu7i7c3SPhaaDI",
-    },
-    {
-      name: "Dr. Jack Reed",
-      dept: "Emergency",
-      status: "available",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCbqlNGf-UBP_bmKLEIHXW5ME0N4fUpm-v4zHLxw-AmDgCJcabHGydiLTCy6hNGWmJdjUG2Td1Pt9q2Aw-lKECxeJVxN_0eZcz_f7hGkM2DAjMRLYSKQzSgUiwCRmZHxfOuYFzGIIoB-OB9nRffi34kZ3fB50Sy-HQhFlaJBt2FVqEC-pPcYRk0twUKXpVD8hd9OLV_k5TDjnwMC_t4Dsq-OQIKd5qGhX16CSZekIV6YjEIkL1vZCC-fh5BFS_EcDuhWnna0oGZHbU",
-    },
-  ]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [physicians, setPhysicians] = useState<Physician[]>([]);
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { searchQuery, setSearchQuery } = useContext(SearchContext);
@@ -147,7 +80,25 @@ export default function AppointmentsPage() {
     setDisplayDate(today.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     setFormDate(today.toISOString().split("T")[0]);
     fetchAppointments();
+    fetchPhysicians();
   }, []);
+
+  async function fetchPhysicians() {
+    try {
+      const res = await fetch(`${API_BASE}/api/doctors`);
+      if (res.ok) {
+        const data = await res.json();
+        setPhysicians(data.map((item: any) => ({
+          name: item.name,
+          dept: item.dept,
+          status: item.status,
+          img: item.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o"
+        })));
+      }
+    } catch (err) {
+      console.error("Failed to load physicians from Database", err);
+    }
+  }
 
   async function fetchAppointments() {
     try {
@@ -349,7 +300,7 @@ export default function AppointmentsPage() {
   const totalBooked = appointments.length;
   const pendingCount = appointments.filter((a) => a.status === "pending").length;
   const completedToday = appointments.filter((a) => a.status === "completed").length;
-  const cancelledCount = appointments.filter((a) => a.status === "cancelled").length + 2;
+  const cancelledCount = appointments.filter((a) => a.status === "cancelled").length;
   const onDutyCount = physicians.filter((p) => p.status !== "off-duty").length;
 
   return (

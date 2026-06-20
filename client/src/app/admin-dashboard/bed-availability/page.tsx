@@ -41,20 +41,7 @@ interface ToastMessage {
 }
 
 export default function BedAvailabilityPage() {
-  const [beds, setBeds] = useState<BedInfo[]>([
-    { id: "ICU-01", ward: "ICU", status: "occupied", patient: "Arthur Morgan", diagnosis: "Post-OP Cardiology" },
-    { id: "ICU-02", ward: "ICU", status: "occupied", patient: "Joel Miller", diagnosis: "Fracture (L2) Traction" },
-    { id: "ICU-03", ward: "ICU", status: "available", patient: "", diagnosis: "" },
-    { id: "ER-01", ward: "ER", status: "occupied", patient: "Elena Fisher", diagnosis: "Acute Viral Dehydration" },
-    { id: "ER-02", ward: "ER", status: "cleaning", patient: "", diagnosis: "", timer: 3 },
-    { id: "ER-03", ward: "ER", status: "available", patient: "", diagnosis: "" },
-    { id: "ER-04", ward: "ER", status: "available", patient: "", diagnosis: "" },
-    { id: "GW-101", ward: "General", status: "occupied", patient: "Leo Vance", diagnosis: "Hypertension Monitoring" },
-    { id: "GW-102", ward: "General", status: "occupied", patient: "John Marston", diagnosis: "Respiratory Therapy" },
-    { id: "GW-103", ward: "General", status: "cleaning", patient: "", diagnosis: "", timer: 8 },
-    { id: "GW-104", ward: "General", status: "available", patient: "", diagnosis: "" },
-    { id: "GW-105", ward: "General", status: "available", patient: "", diagnosis: "" },
-  ]);
+  const [beds, setBeds] = useState<BedInfo[]>([]);
 
   const [wardFilter, setWardFilter] = useState<string>("all");
   const { searchQuery, setSearchQuery } = useContext(SearchContext);
@@ -201,10 +188,17 @@ export default function BedAvailabilityPage() {
   // Stats Calculations
   const occupiedCount = beds.filter((b) => b.status === "occupied").length;
   const cleaningCount = beds.filter((b) => b.status === "cleaning").length;
-  const baseOccupied = 236 - 5; // Base static values minus active stateful rows
-  const finalOccupiedCount = baseOccupied + occupiedCount;
-  const finalAvailableCount = 250 - finalOccupiedCount - cleaningCount;
-  const occupancyPercentage = ((finalOccupiedCount / 250) * 100).toFixed(1);
+  const totalBedsCount = beds.length;
+  const availableCount = totalBedsCount - occupiedCount - cleaningCount;
+  const occupancyPercentage = totalBedsCount > 0 ? ((occupiedCount / totalBedsCount) * 100).toFixed(1) : "0.0";
+
+  const icuBeds = beds.filter((b) => b.ward.toUpperCase() === "ICU");
+  const icuTotal = icuBeds.length;
+  const icuAvailable = icuBeds.filter((b) => b.status === "available").length;
+
+  const vipBeds = beds.filter((b) => b.ward.toUpperCase() === "VIP");
+  const vipTotal = vipBeds.length;
+  const vipAvailable = vipBeds.filter((b) => b.status === "available").length;
 
   // Filters
   const filteredBeds = beds.filter((bed) => {
@@ -244,7 +238,7 @@ export default function BedAvailabilityPage() {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Stats Cards */}
       <div ref={statsContainerRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         <div className="glass-card p-5 rounded-2xl inner-glow flex flex-col justify-between h-32">
           <div className="flex justify-between items-start">
@@ -257,7 +251,7 @@ export default function BedAvailabilityPage() {
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Occupied Beds</p>
-            <h3 className="text-xl font-bold mt-1">{finalOccupiedCount} / 250</h3>
+            <h3 className="text-xl font-bold mt-1">{occupiedCount} / {totalBedsCount}</h3>
           </div>
         </div>
 
@@ -266,11 +260,11 @@ export default function BedAvailabilityPage() {
             <div className="w-9 h-9 rounded-xl bg-tertiary-container/15 flex items-center justify-center text-tertiary-container">
               <CheckCircle className="w-4 h-4" />
             </div>
-            <span className="text-[9px] px-2 py-0.5 rounded-full bg-error/15 text-error border border-error/25 font-bold uppercase tracking-wider">Critical</span>
+            <span className="text-[9px] px-2 py-0.5 rounded-full bg-error/15 text-error border border-error/25 font-bold uppercase tracking-wider">Stable</span>
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Available / Vacant</p>
-            <h3 className="text-xl font-bold mt-1">{finalAvailableCount}</h3>
+            <h3 className="text-xl font-bold mt-1">{availableCount}</h3>
           </div>
         </div>
 
@@ -279,11 +273,11 @@ export default function BedAvailabilityPage() {
             <div className="w-9 h-9 rounded-xl bg-error/15 flex items-center justify-center text-error">
               <Zap className="w-4 h-4" />
             </div>
-            <span className="text-error text-[10px] font-bold">2 Left</span>
+            <span className="text-error text-[10px] font-bold">{icuAvailable} Left</span>
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">ICU Vacancies</p>
-            <h3 className="text-xl font-bold mt-1">2 / 30</h3>
+            <h3 className="text-xl font-bold mt-1">{icuAvailable} / {icuTotal}</h3>
           </div>
         </div>
 
@@ -292,11 +286,11 @@ export default function BedAvailabilityPage() {
             <div className="w-9 h-9 rounded-xl bg-secondary-container/15 flex items-center justify-center text-secondary-container">
               <Bed className="w-4 h-4" />
             </div>
-            <span className="text-secondary-container text-[10px] font-bold">2 Vacant</span>
+            <span className="text-secondary-container text-[10px] font-bold">{vipAvailable} Vacant</span>
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">VIP Room</p>
-            <h3 className="text-xl font-bold mt-1">2 / 5</h3>
+            <h3 className="text-xl font-bold mt-1">{vipAvailable} / {vipTotal}</h3>
           </div>
         </div>
         <div className="glass-card p-5 rounded-2xl inner-glow flex flex-col justify-between h-32">

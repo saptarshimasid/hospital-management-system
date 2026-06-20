@@ -382,7 +382,7 @@ export default function OTPage() {
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Avg Procedure</p>
-            <h3 className="text-xl font-bold mt-1">85 mins</h3>
+            <h3 className="text-xl font-bold mt-1">{surgeries.length > 0 ? (() => { const durations = surgeries.map(s => { const parts = s.time.split(' - '); if (parts.length === 2) { const [sh, sm] = parts[0].split(':').map(Number); const [eh, em] = parts[1].split(':').map(Number); return (eh * 60 + em) - (sh * 60 + sm); } return 0; }).filter(d => d > 0); return durations.length > 0 ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : '--'; })() : '--'} mins</h3>
           </div>
         </div>
       </div>

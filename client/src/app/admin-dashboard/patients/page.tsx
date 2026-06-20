@@ -280,7 +280,7 @@ export default function PatientsPage() {
             </div>
             <p className="text-[10px] text-on-surface-variant mt-4 flex items-center gap-1">
               <TrendingUp className="w-3.5 h-3.5 text-primary-container" />
-              <span>+12% vs last quarter admissions</span>
+              <span>{totalPatients > 0 ? `${totalPatients} registered patients` : "No patients registered yet"}</span>
             </p>
           </div>
 

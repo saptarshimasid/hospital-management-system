@@ -282,9 +282,11 @@ export default function Dashboard() {
             <div className="w-9 h-9 rounded-xl bg-primary-container/15 flex items-center justify-center text-primary-container">
               <Users className="w-4 h-4" />
             </div>
-            <span className="text-[10px] text-tertiary-container font-bold flex items-center gap-0.5">
-              +12% <TrendingUp className="w-3 h-3" />
-            </span>
+            {metrics.stats.totalPatients.change && (
+              <span className="text-[10px] text-tertiary-container font-bold flex items-center gap-0.5">
+                {metrics.stats.totalPatients.change} <TrendingUp className="w-3 h-3" />
+              </span>
+            )}
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Total Patients</p>
@@ -320,9 +322,11 @@ export default function Dashboard() {
             <div className="w-9 h-9 rounded-xl bg-primary-container/15 flex items-center justify-center text-primary-container">
               <DollarSign className="w-4 h-4" />
             </div>
-            <span className="text-[10px] text-tertiary-container font-bold flex items-center gap-0.5">
-              +8% <TrendingUp className="w-3 h-3" />
-            </span>
+            {metrics.stats.weeklyRevenue.change && (
+              <span className="text-[10px] text-tertiary-container font-bold flex items-center gap-0.5">
+                {metrics.stats.weeklyRevenue.change} <TrendingUp className="w-3 h-3" />
+              </span>
+            )}
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Weekly Revenue</p>
@@ -336,7 +340,7 @@ export default function Dashboard() {
             <div className="w-9 h-9 rounded-xl bg-error/15 flex items-center justify-center text-error">
               <Bed className="w-4 h-4" />
             </div>
-            <span className="text-[9px] px-2 py-0.5 rounded-full bg-error/15 text-error border border-error/25 font-bold uppercase tracking-wider">Critical</span>
+            <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${metrics.stats.bedAvailability.status === 'Critical' ? 'bg-error/15 text-error border border-error/25' : 'bg-tertiary-container/15 text-tertiary-container border border-tertiary-container/25'}`}>{metrics.stats.bedAvailability.status}</span>
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Bed Availability</p>

@@ -440,46 +440,31 @@ export default function BedAvailabilityPage() {
             <p className="text-[10px] text-on-surface-variant mb-6">Occupancy metrics by unit</p>
             
             <div className="space-y-6">
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[11px] font-medium">
-                  <span className="text-on-surface-variant">ICU (Wing A)</span>
-                  <span className="text-error font-bold font-mono">93.3%</span>
-                </div>
-                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-error rounded-full" style={{ width: "93.3%" }}></div>
-                </div>
-                <p className="text-[9px] text-on-surface-variant text-right">28 / 30 Beds Occupied</p>
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[11px] font-medium">
-                  <span className="text-on-surface-variant">Emergency Room</span>
-                  <span className="text-[#e8a317] font-bold font-mono">75.0%</span>
-                </div>
-                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#e8a317] rounded-full" style={{ width: "75%" }}></div>
-                </div>
-                <p className="text-[9px] text-on-surface-variant text-right">15 / 20 Beds Occupied</p>
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[11px] font-medium">
-                  <span className="text-on-surface-variant">General Ward</span>
-                  <span className="text-error font-bold font-mono">94.6%</span>
-                </div>
-                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-error rounded-full" style={{ width: "94.6%" }}></div>
-                </div>
-                <p className="text-[9px] text-on-surface-variant text-right">142 / 150 Beds Occupied</p>
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[11px] font-medium">
-                  <span className="text-on-surface-variant">Pediatric Wing</span>
-                  <span className="text-tertiary-container font-bold font-mono">64.0%</span>
-                </div>
-                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-tertiary-container rounded-full" style={{ width: "64%" }}></div>
-                </div>
-                <p className="text-[9px] text-on-surface-variant text-right">32 / 50 Beds Occupied</p>
-              </div>
+              {[
+                { label: "ICU (Wing A)", ward: "ICU", color: "error" },
+                { label: "Emergency Room", ward: "ER", color: "[#e8a317]" },
+                { label: "General Ward", ward: "General", color: "primary-container" },
+                { label: "Pediatric Wing", ward: "Pediatrics", color: "tertiary-container" },
+              ].map(({ label, ward, color }) => {
+                const wardBeds = beds.filter((b) => b.ward.toUpperCase() === ward.toUpperCase());
+                const wardTotal = wardBeds.length;
+                const wardOccupied = wardBeds.filter((b) => b.status === "occupied").length;
+                const pct = wardTotal > 0 ? ((wardOccupied / wardTotal) * 100).toFixed(1) : "0.0";
+                const barColor = parseFloat(pct) > 85 ? "bg-error" : parseFloat(pct) > 60 ? `bg-[#e8a317]` : `bg-tertiary-container`;
+                const textColor = parseFloat(pct) > 85 ? "text-error" : parseFloat(pct) > 60 ? "text-[#e8a317]" : "text-tertiary-container";
+                return (
+                  <div key={ward} className="space-y-1.5">
+                    <div className="flex justify-between text-[11px] font-medium">
+                      <span className="text-on-surface-variant">{label}</span>
+                      <span className={`${textColor} font-bold font-mono`}>{pct}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div className={`h-full ${barColor} rounded-full`} style={{ width: `${pct}%` }}></div>
+                    </div>
+                    <p className="text-[9px] text-on-surface-variant text-right">{wardOccupied} / {wardTotal} Beds Occupied</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

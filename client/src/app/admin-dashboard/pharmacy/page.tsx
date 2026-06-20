@@ -299,7 +299,7 @@ export default function PharmacyPage() {
             <div className="w-9 h-9 rounded-xl bg-tertiary-container/15 flex items-center justify-center text-tertiary-container">
               <CheckCircle className="w-4 h-4" />
             </div>
-            <span className="text-[10px] text-tertiary-container font-bold">+12%</span>
+            {dispatchedToday > 0 && <span className="text-[10px] text-tertiary-container font-bold">{dispatchedToday} Done</span>}
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Dispatched Today</p>

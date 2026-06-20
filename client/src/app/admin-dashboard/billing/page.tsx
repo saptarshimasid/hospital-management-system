@@ -265,9 +265,11 @@ export default function BillingPage() {
             <div className="w-9 h-9 rounded-xl bg-primary-container/15 flex items-center justify-center text-primary-container">
               <DollarSign className="w-4 h-4" />
             </div>
-            <span className="text-[10px] text-tertiary-container font-bold flex items-center gap-0.5">
-              +18% <TrendingUp className="w-3 h-3" />
-            </span>
+            {invoices.length > 0 && (
+              <span className="text-[10px] text-tertiary-container font-bold flex items-center gap-0.5">
+                <TrendingUp className="w-3 h-3" />
+              </span>
+            )}
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Billed Today</p>
@@ -321,7 +323,7 @@ export default function BillingPage() {
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Collection Rate</p>
-            <h3 className="text-xl font-bold mt-1">97.8%</h3>
+            <h3 className="text-xl font-bold mt-1">{invoices.length > 0 ? ((paidCount / invoices.length) * 100).toFixed(1) : "0.0"}%</h3>
           </div>
         </div>
       </div>

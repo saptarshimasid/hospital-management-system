@@ -46,6 +46,8 @@ def chat_endpoint(request: ChatRequest):
             "response": result["response"]
         }
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         err_str = str(e)
         is_quota = "RESOURCE_EXHAUSTED" in err_str or "quota" in err_str.lower() or "429" in err_str
         is_unavailable = "UNAVAILABLE" in err_str or "503" in err_str or "high demand" in err_str.lower()

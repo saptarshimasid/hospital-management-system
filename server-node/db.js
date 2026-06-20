@@ -497,7 +497,7 @@ async function dbInit() {
         prompt TEXT NOT NULL,
         response TEXT NOT NULL,
         category TEXT,
-        embedding vector(768),
+        embedding vector(3072),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
     `);

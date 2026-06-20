@@ -25,7 +25,7 @@ def get_db_connection():
     return psycopg2.connect(db_url)
 
 # Initialize Google Generative AI Embeddings
-embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
+embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
 def get_relevant_context(query: str, limit: int = 1) -> str:
     try:

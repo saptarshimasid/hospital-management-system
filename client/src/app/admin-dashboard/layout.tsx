@@ -273,7 +273,7 @@ export default function DashboardLayout({
               className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-high/40 border border-white/5 cursor-pointer hover:bg-white/5 transition-all"
             >
               <img
-                src={profile.img}
+                src={profile.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o"}
                 alt="Profile Portrait"
                 className="w-10 h-10 rounded-full border border-primary/20 object-cover"
               />
@@ -388,7 +388,7 @@ export default function DashboardLayout({
               onClick={() => setProfileOpen(true)}
               className="w-10 h-10 flex items-center justify-center rounded-full overflow-hidden border border-white/10 hover:bg-white/5 transition-all cursor-pointer"
             >
-              <img src={profile.img} alt="Profile" className="w-full h-full object-cover" />
+              <img src={profile.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o"} alt="Profile" className="w-full h-full object-cover" />
             </button>
             <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:text-error hover:bg-white/5 transition-all border border-white/5">
               <LogOut className="w-4 h-4" />
@@ -448,7 +448,7 @@ export default function DashboardLayout({
               <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Profile Portrait</label>
               <div className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/10">
                 <img
-                  src={profile.img}
+                  src={profile.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o"}
                   alt="Portrait Preview"
                   className="w-12 h-12 rounded-full border border-primary/20 object-cover bg-black/20"
                   onError={(e) => {

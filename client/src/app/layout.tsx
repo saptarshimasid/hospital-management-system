@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Health Copilot | Clinical Command Center",
     description: "Futuristic clinical coordination portal powered by multi-agent AI networks.",
-    url: "https://health-copilot-command.netlify.app",
+    url: "https://github.com/saptarshimasid/hospital-management-system",
     siteName: "Health Copilot",
     images: [
       {
@@ -50,7 +50,7 @@ export default function RootLayout({
               "name": "Health Copilot Systems",
               "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o",
               "description": "Multi-agent AI platform orchestrating clinical diagnostics, patient triage, and workflow management.",
-              "url": "https://health-copilot-command.netlify.app",
+              "url": "https://github.com/saptarshimasid/hospital-management-system",
               "knowsAbout": ["Clinical Decision Support System", "AI Medical Triage", "Medical Command Center Software"],
               "medicalSpecialty": "EmergencyMedicine",
             }),

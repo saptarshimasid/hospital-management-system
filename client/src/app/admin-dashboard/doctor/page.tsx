@@ -465,7 +465,7 @@ export default function DoctorPage() {
                     <td className="py-3.5">
                       <div className="flex items-center gap-3">
                         <img
-                          src={doc.img}
+                          src={doc.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuBUR93vsX8-PeJEf1vGo8anymPqpciIEu9_x9IjqrdZVQwRFInWdZrZh6EzF98zhcTAmu_qo75Zgq62h2u1qhebSvRpv8x9AdnDALYA2yPyr7nokvD2GDDZcOQynWOdukWkeiebcJhfXbKTWxTKwBvrfayAZQVJWFzwXqW01XzNzkzLnGnX6VWvfWZzXmROwFxKzACpOmHaTRUfrTcmj9buFrYebCfW0MG8AUWnuLh0dNVA-DRbYj5WYsqfFohmMdu7i7c3SPhaaDI"}
                           alt={doc.name}
                           className="w-8 h-8 rounded-full border border-white/10 object-cover"
                         />
@@ -730,7 +730,7 @@ export default function DoctorPage() {
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-3">
                 <img
-                  src={selectedDoctor.img}
+                  src={selectedDoctor.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuBUR93vsX8-PeJEf1vGo8anymPqpciIEu9_x9IjqrdZVQwRFInWdZrZh6EzF98zhcTAmu_qo75Zgq62h2u1qhebSvRpv8x9AdnDALYA2yPyr7nokvD2GDDZcOQynWOdukWkeiebcJhfXbKTWxTKwBvrfayAZQVJWFzwXqW01XzNzkzLnGnX6VWvfWZzXmROwFxKzACpOmHaTRUfrTcmj9buFrYebCfW0MG8AUWnuLh0dNVA-DRbYj5WYsqfFohmMdu7i7c3SPhaaDI"}
                   alt={selectedDoctor.name}
                   className="w-12 h-12 rounded-full border border-white/10 object-cover"
                 />

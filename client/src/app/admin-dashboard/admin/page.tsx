@@ -606,7 +606,7 @@ export default function AdminConsolePage() {
                             {f.key === "img" && val ? (
                               <div className="flex items-center gap-2">
                                 <img
-                                  src={val}
+                                  src={val || "https://lh3.googleusercontent.com/aida-public/AB6AXuBUR93vsX8-PeJEf1vGo8anymPqpciIEu9_x9IjqrdZVQwRFInWdZrZh6EzF98zhcTAmu_qo75Zgq62h2u1qhebSvRpv8x9AdnDALYA2yPyr7nokvD2GDDZcOQynWOdukWkeiebcJhfXbKTWxTKwBvrfayAZQVJWFzwXqW01XzNzkzLnGnX6VWvfWZzXmROwFxKzACpOmHaTRUfrTcmj9buFrYebCfW0MG8AUWnuLh0dNVA-DRbYj5WYsqfFohmMdu7i7c3SPhaaDI"}
                                   alt="Preview"
                                   className="w-6 h-6 rounded-full border border-white/10 object-cover shrink-0"
                                   onError={(e) => {

@@ -20,13 +20,13 @@ import {
   mapRow
 } from '@/utils/db';
 
-let dbInitialized = false;
+let dbInitializationPromise: Promise<void> | null = null;
 
 async function ensureDb() {
-  if (!dbInitialized) {
-    await dbInit();
-    dbInitialized = true;
+  if (!dbInitializationPromise) {
+    dbInitializationPromise = dbInit();
   }
+  await dbInitializationPromise;
 }
 
 // Helper to extract JSON body safely
@@ -764,6 +764,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ rout
       const rxId = route[1];
       const rx = await Prescription.findByIdAndUpdate(rxId, { status: 'dispensed' });
       return NextResponse.json(rx);
+    }
+
+    // PUT /api/notifications/read-all
+    if (path === 'notifications/read-all') {
+      await pool.query('UPDATE notifications SET read = TRUE');
+      return NextResponse.json({ success: true });
     }
 
     // PUT /api/notifications/:id

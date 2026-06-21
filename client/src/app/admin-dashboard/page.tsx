@@ -592,7 +592,7 @@ export default function Dashboard() {
                     <td className="py-3">
                       <div className="flex items-center gap-2.5">
                         <img
-                          src={pat.img}
+                          src={pat.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuDmVsYcVmImeZHkXR5iUfIXPI5aazV4igMcaxMipsm2kMl5kuVusqoSIq-_yNJFvRtmx8XT825hAdfxKHm-uLdedCQx8UUlPTKptmJMQ2djWKfH3-GAkQcOrF3HxxoeEyJZQGfYd1IbXEdL0CnvJRvSHAnNzMaCI7UtJec2u2omFQCj1GWZZ2pRt9XNSCO4eoCRCrG-bXSl5ofe3yq-gt_OF0pG-A3Xnf-SFBpyhOtZip_ULAYFhioMcc4K9XMrYT3Q59FkV-OTwBw"}
                           alt={pat.name}
                           className="w-7 h-7 rounded-full border border-white/10 object-cover"
                         />
@@ -638,7 +638,7 @@ export default function Dashboard() {
                 shift.active ? "bg-surface-container-high/20 border-white/5" : "bg-white/5 opacity-40 border-transparent"
               }`}>
                 <div className="relative">
-                  <img src={shift.img} alt={shift.name} className="w-8 h-8 rounded-full object-cover border border-white/5" />
+                  <img src={shift.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuBUR93vsX8-PeJEf1vGo8anymPqpciIEu9_x9IjqrdZVQwRFInWdZrZh6EzF98zhcTAmu_qo75Zgq62h2u1qhebSvRpv8x9AdnDALYA2yPyr7nokvD2GDDZcOQynWOdukWkeiebcJhfXbKTWxTKwBvrfayAZQVJWFzwXqW01XzNzkzLnGnX6VWvfWZzXmROwFxKzACpOmHaTRUfrTcmj9buFrYebCfW0MG8AUWnuLh0dNVA-DRbYj5WYsqfFohmMdu7i7c3SPhaaDI"} alt={shift.name} className="w-8 h-8 rounded-full object-cover border border-white/5" />
                   {shift.active && (
                     <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-tertiary-container rounded-full border-2 border-surface" />
                   )}

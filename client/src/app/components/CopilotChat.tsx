@@ -15,7 +15,7 @@ export default function CopilotChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hello Dr. Jenkins. I am your AI Clinical Copilot. How can I assist you with patient triage or diagnostic workflows today?",
+      content: "Hello Myself Dr. Saptarshi. I am your AI Clinical Copilot. How can I assist you with patient triage or diagnostic workflows today?",
       category: "general"
     }
   ]);

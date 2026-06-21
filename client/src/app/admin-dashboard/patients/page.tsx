@@ -19,7 +19,8 @@ import {
   Eye,
   Mail,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Upload
 } from "lucide-react";
 
 interface Patient {
@@ -65,6 +66,7 @@ export default function PatientsPage() {
   const [formGender, setFormGender] = useState("Male");
   const [formAge, setFormAge] = useState("");
   const [formEmail, setFormEmail] = useState("");
+  const [formImg, setFormImg] = useState("");
   const [displayDate, setDisplayDate] = useState("");
 
   const statsContainerRef = useRef<HTMLDivElement>(null);
@@ -167,7 +169,7 @@ export default function PatientsPage() {
       gender: formGender,
       age: parseInt(formAge) || 0,
       email: formEmail,
-      img: imgUrl
+      img: formImg || imgUrl
     };
 
     try {
@@ -190,6 +192,7 @@ export default function PatientsPage() {
       setFormGender("Male");
       setFormAge("");
       setFormEmail("");
+      setFormImg("");
     } catch (err) {
       console.error(err);
       triggerToast("Database Error", "Failed to save new patient record.", "error");
@@ -518,6 +521,60 @@ export default function PatientsPage() {
         </div>
 
         <form onSubmit={handleAddSubmit} className="space-y-4">
+          {/* Image Upload Option */}
+          <div className="space-y-2">
+            <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Patient Photo</label>
+            <div className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/10">
+              {formImg ? (
+                <img
+                  src={formImg}
+                  alt="Photo Preview"
+                  className="w-12 h-12 rounded-full border border-primary/20 object-cover bg-black/20"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-on-surface-variant">
+                  <User className="w-5 h-5" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] text-[#00f0ff] truncate font-mono">
+                  {formImg ? "Local Image Selected" : "No image selected (Defaulting to Random Avatar)"}
+                </p>
+              </div>
+              {formImg && (
+                <button
+                  type="button"
+                  onClick={() => setFormImg("")}
+                  className="text-[10px] text-error hover:underline cursor-pointer font-medium"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+
+            <div className="relative flex items-center justify-center border border-dashed border-white/20 hover:border-[#00f0ff]/50 rounded-xl p-3 bg-white/2 hover:bg-[#00f0ff]/5 transition-all cursor-pointer group">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setFormImg(reader.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+              <div className="text-center space-y-1 pointer-events-none flex flex-col items-center">
+                <Upload className="w-4 h-4 text-[#00f0ff]/80 group-hover:scale-110 transition-transform" />
+                <p className="text-[10px] text-on-surface-variant font-semibold">Click or drag image file here</p>
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-1">
             <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Patient Name</label>
             <input

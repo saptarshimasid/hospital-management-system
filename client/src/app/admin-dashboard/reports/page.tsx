@@ -47,6 +47,7 @@ interface ToastMessage {
 
 export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
+  const [doctors, setDoctors] = useState<{name: string}[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [logs, setLogs] = useState<LogMessage[]>([
@@ -66,7 +67,7 @@ export default function ReportsPage() {
   // Form states
   const [formReportName, setFormReportName] = useState("");
   const [formCategory, setFormCategory] = useState<"Clinical" | "Financial" | "Operational">("Clinical");
-  const [formAuthor, setFormAuthor] = useState("Dr. Sarah Jenkins");
+  const [formAuthor, setFormAuthor] = useState("");
   const [formDate, setFormDate] = useState("");
   const [formSize, setFormSize] = useState("1.2 MB");
   const [displayDate, setDisplayDate] = useState("");
@@ -100,7 +101,20 @@ export default function ReportsPage() {
     setDisplayDate(today.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     setFormDate(today.toISOString().split("T")[0]);
     fetchReports();
+    fetchDoctors();
   }, []);
+
+  async function fetchDoctors() {
+    try {
+      const res = await fetch(`${API_BASE}/api/doctors`);
+      if (res.ok) {
+        const data = await res.json();
+        setDoctors(data.map((d: any) => ({ name: d.name })));
+      }
+    } catch (err) {
+      console.error("Failed to load doctors for author dropdown", err);
+    }
+  }
 
   // Stats calculation
   const clinicalAudits = reports.filter((r) => r.category === "Clinical").length;
@@ -505,10 +519,11 @@ export default function ReportsPage() {
                 onChange={(e) => setFormAuthor(e.target.value)}
                 className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] cursor-pointer"
               >
-                <option value="Dr. Sarah Jenkins">Dr. Sarah Jenkins</option>
-                <option value="Dr. Helena Troy">Dr. Helena Troy</option>
-                <option value="Dr. Jack Reed">Dr. Jack Reed</option>
-                <option value="Dr. Aisha Khan">Dr. Aisha Khan</option>
+                {doctors.length > 0 ? doctors.map((d) => (
+                  <option key={d.name} value={d.name}>{d.name}</option>
+                )) : (
+                  <option value="">No doctors available</option>
+                )}
               </select>
             </div>
           </div>

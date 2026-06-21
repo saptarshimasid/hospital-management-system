@@ -1,4 +1,8 @@
 {
-  "dynamicTables": [],
-  "dynamicModels": {}
+  "dynamicTables": [
+    "admin"
+  ],
+  "dynamicModels": {
+    "Admin": "admin"
+  }
 }

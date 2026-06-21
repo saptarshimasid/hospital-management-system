@@ -72,6 +72,7 @@ export default function Dashboard() {
     recentPatients: PatientRecord[];
     shifts: StaffShift[];
     monthlyRevenue?: number[];
+    dailyRevenue?: number[];
   } | null>(null);
 
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -82,6 +83,7 @@ export default function Dashboard() {
   const [formAge, setFormAge] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [displayDate, setDisplayDate] = useState("");
+  const [chartView, setChartView] = useState<"yearly" | "monthly">("yearly");
 
   const statsContainerRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -119,7 +121,8 @@ export default function Dashboard() {
         departments: [],
         recentPatients: [],
         shifts: [],
-        monthlyRevenue: [0, 0, 0, 0, 0, 0]
+        monthlyRevenue: [0, 0, 0, 0, 0, 0],
+        dailyRevenue: []
       });
     }
   }
@@ -176,6 +179,42 @@ export default function Dashboard() {
     for (let i = 5; i >= 0; i--) {
       const targetDate = new Date(d.getFullYear(), d.getMonth() - i, 1);
       labels.push(monthNames[targetDate.getMonth()]);
+    }
+    return labels;
+  };
+
+  // Monthly (daily) chart data — compute daily revenue for current month
+  const getDailyRevenue = () => {
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    if (metrics?.dailyRevenue && metrics.dailyRevenue.length > 0) {
+      return metrics.dailyRevenue;
+    }
+    return new Array(daysInMonth).fill(0);
+  };
+
+  const dailyRevData = getDailyRevenue();
+  const daysInCurrentMonth = dailyRevData.length;
+  const todayDate = new Date().getDate();
+  const maxDailyVal = Math.max(...dailyRevData, 100);
+  const dailyPoints = dailyRevData.map((val, idx) => {
+    const x = daysInCurrentMonth > 1 ? (idx / (daysInCurrentMonth - 1)) * 1000 : 500;
+    const y = 180 - (val / maxDailyVal) * 150;
+    return { x, y };
+  });
+
+  const dailyLinePath = dailyPoints.length > 1 
+    ? `M ${dailyPoints[0].x},${dailyPoints[0].y}` + dailyPoints.slice(1).map((p, i) => ` C ${dailyPoints[i].x + (500 / daysInCurrentMonth)},${dailyPoints[i].y} ${p.x - (500 / daysInCurrentMonth)},${p.y} ${p.x},${p.y}`).join("")
+    : `M 500,180`;
+  const dailyAreaPath = dailyPoints.length > 1 
+    ? `${dailyLinePath} L 1000,200 L 0,200 Z`
+    : `M 500,180 L 1000,200 L 0,200 Z`;
+
+  const getDayLabels = () => {
+    const labels: number[] = [];
+    // Show every 5th day + 1 + last day
+    for (let i = 1; i <= daysInCurrentMonth; i++) {
+      if (i === 1 || i % 5 === 0 || i === daysInCurrentMonth) labels.push(i);
     }
     return labels;
   };
@@ -363,11 +402,11 @@ export default function Dashboard() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h4 className="text-sm font-bold text-primary">Revenue Overview</h4>
-              <p className="text-[10px] text-on-surface-variant mt-0.5">Monthly growth & billing distribution</p>
+              <p className="text-[10px] text-on-surface-variant mt-0.5">{chartView === 'yearly' ? 'Monthly growth & billing distribution' : `Daily revenue — ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`}</p>
             </div>
             <div className="flex bg-surface-container/60 border border-white/5 rounded-lg p-0.5 text-[10px]">
-              <button className="px-3 py-1.5 rounded-md bg-primary-container/10 text-primary-container font-bold">Yearly</button>
-              <button className="px-3 py-1.5 rounded-md text-on-surface-variant">Monthly</button>
+              <button onClick={() => setChartView('yearly')} className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${chartView === 'yearly' ? 'bg-primary-container/10 text-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}>Yearly</button>
+              <button onClick={() => setChartView('monthly')} className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${chartView === 'monthly' ? 'bg-primary-container/10 text-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}>Monthly</button>
             </div>
           </div>
 
@@ -379,31 +418,71 @@ export default function Dashboard() {
                   <stop offset="0%" stopColor="rgba(0, 240, 255, 0.3)"></stop>
                   <stop offset="100%" stopColor="rgba(0, 240, 255, 0)"></stop>
                 </linearGradient>
+                <linearGradient id="chartGradientHighlight" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="rgba(138, 180, 248, 0.4)"></stop>
+                  <stop offset="100%" stopColor="rgba(138, 180, 248, 0)"></stop>
+                </linearGradient>
               </defs>
               {/* Background shaded area */}
               <motion.path
+                key={chartView}
                 initial={{ pathLength: 0, opacity: 0 }}
                 animate={{ pathLength: 1, opacity: 1 }}
                 transition={{ duration: 1.5, ease: "easeInOut", delay: 0.3 }}
-                d={areaPath}
+                d={chartView === 'yearly' ? areaPath : dailyAreaPath}
                 fill="url(#chartGradient)"
               />
               {/* Line path */}
               <motion.path
+                key={`line-${chartView}`}
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
                 transition={{ duration: 2.0, ease: "easeInOut", delay: 0.3 }}
-                d={linePath}
+                d={chartView === 'yearly' ? linePath : dailyLinePath}
                 fill="none"
                 stroke="#00f0ff"
                 strokeLinecap="round"
                 strokeWidth="3"
               />
+              {/* Highlight dots: current month in yearly / today in monthly */}
+              {chartView === 'yearly' && points.map((pt, idx) => (
+                <circle
+                  key={idx}
+                  cx={pt.x}
+                  cy={pt.y}
+                  r={idx === 5 ? 6 : 3}
+                  fill={idx === 5 ? '#8ab4f8' : '#00f0ff'}
+                  stroke={idx === 5 ? '#fff' : 'none'}
+                  strokeWidth={idx === 5 ? 2 : 0}
+                  opacity={idx === 5 ? 1 : 0.6}
+                />
+              ))}
+              {chartView === 'monthly' && dailyPoints.map((pt, idx) => {
+                const isToday = idx === todayDate - 1;
+                return (
+                  <circle
+                    key={idx}
+                    cx={pt.x}
+                    cy={pt.y}
+                    r={isToday ? 6 : 2}
+                    fill={isToday ? '#8ab4f8' : '#00f0ff'}
+                    stroke={isToday ? '#fff' : 'none'}
+                    strokeWidth={isToday ? 2 : 0}
+                    opacity={isToday ? 1 : 0.4}
+                  />
+                );
+              })}
             </svg>
             <div className="flex justify-between text-[9px] text-on-surface-variant font-mono uppercase tracking-wider px-2 mt-2">
-              {getMonthLabels().map((m, idx) => (
-                <span key={idx}>{m}</span>
-              ))}
+              {chartView === 'yearly' ? (
+                getMonthLabels().map((m, idx) => (
+                  <span key={idx} className={idx === 5 ? 'text-[#8ab4f8] font-bold' : ''}>{m}</span>
+                ))
+              ) : (
+                getDayLabels().map((day) => (
+                  <span key={day} className={day === todayDate ? 'text-[#8ab4f8] font-bold' : ''}>{day}</span>
+                ))
+              )}
             </div>
           </div>
         </motion.div>

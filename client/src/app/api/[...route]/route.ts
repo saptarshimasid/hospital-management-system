@@ -15,7 +15,9 @@ import {
   NotificationModel,
   PantryOrder,
   Diagnosis,
-  pool
+  DashboardPage,
+  pool,
+  mapRow
 } from '@/utils/db';
 
 let dbInitialized = false;
@@ -146,13 +148,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
       const monthlyRevenue = [0, 0, 0, 0, 0, 0];
       const nowMonth = new Date().getMonth();
       const nowYear = new Date().getFullYear();
+
+      // Calculate daily revenue for current month
+      const daysInCurrentMonth = new Date(nowYear, nowMonth + 1, 0).getDate();
+      const dailyRevenue = new Array(daysInCurrentMonth).fill(0);
+
       for (const t of txns) {
-        const tDate = new Date(t.date);
-        const tMonth = tDate.getMonth();
-        const tYear = tDate.getFullYear();
-        const monthDiff = (nowYear - tYear) * 12 + (nowMonth - tMonth);
-        if (monthDiff >= 0 && monthDiff < 6) {
-          monthlyRevenue[5 - monthDiff] += parseFloat(t.amount || 0);
+        if (!t.date) continue;
+        const parts = t.date.split('-');
+        if (parts.length === 3) {
+          const tYear = parseInt(parts[0]);
+          const tMonth = parseInt(parts[1]) - 1; // 0-indexed
+          const tDay = parseInt(parts[2]);
+
+          const monthDiff = (nowYear - tYear) * 12 + (nowMonth - tMonth);
+          if (monthDiff >= 0 && monthDiff < 6) {
+            monthlyRevenue[5 - monthDiff] += parseFloat(t.amount || 0);
+          }
+
+          if (tMonth === nowMonth && tYear === nowYear) {
+            if (tDay >= 1 && tDay <= daysInCurrentMonth) {
+              dailyRevenue[tDay - 1] += parseFloat(t.amount || 0);
+            }
+          }
         }
       }
 
@@ -224,7 +242,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
           email: p.email
         })),
         shifts: dynamicShifts,
-        monthlyRevenue: monthlyRevenue
+        monthlyRevenue: monthlyRevenue,
+        dailyRevenue: dailyRevenue
       });
     }
 
@@ -295,9 +314,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
       return NextResponse.json(list);
     }
 
+    if (path === 'pantry/inventory') {
+      const list = await pool.query('SELECT * FROM pantry_inventory ORDER BY name ASC');
+      return NextResponse.json(list.rows.map(row => mapRow(row, 'pantry_inventory')));
+    }
+
     if (path === 'diagnoses') {
       const list = await Diagnosis.find().sort({ createdAt: -1 });
       return NextResponse.json(list);
+    }
+
+    if (path === 'pages') {
+      const list = await pool.query('SELECT * FROM dashboard_pages ORDER BY order_index ASC');
+      return NextResponse.json(list.rows.map(row => mapRow(row, 'dashboard_pages')));
     }
 
     return NextResponse.json({ error: 'Not Found' }, { status: 404 });
@@ -403,7 +432,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
     if (path === 'pantry') {
       const po = new PantryOrder(body);
       await po.save();
+
+      // Decrement stock of the item in pantry_inventory
+      const item = body.item;
+      const quantity = body.quantity || 1;
+      await pool.query(
+        'UPDATE pantry_inventory SET stock = GREATEST(0, stock - $1), updated_at = CURRENT_TIMESTAMP WHERE name = $2',
+        [quantity, item]
+      );
+
       return NextResponse.json(po, { status: 201 });
+    }
+
+    if (path === 'pantry/inventory') {
+      const { name, stock, unit } = body;
+      const newItem = await pool.query(
+        'INSERT INTO pantry_inventory (name, stock, unit) VALUES ($1, $2, $3) RETURNING *',
+        [name, stock, unit]
+      );
+      return NextResponse.json(mapRow(newItem.rows[0], 'pantry_inventory'), { status: 201 });
     }
 
     if (path === 'diagnoses') {
@@ -420,9 +467,97 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
       return NextResponse.json(diag, { status: 201 });
     }
 
+    if (path === 'prescriptions') {
+      const rx = new Prescription(body);
+      await rx.save();
+      return NextResponse.json(rx, { status: 201 });
+    }
+
+    if (path === 'beds') {
+      const bed = new Bed(body);
+      await bed.save();
+      return NextResponse.json(bed, { status: 201 });
+    }
+
+    if (path === 'pages') {
+      const { name, href, icon, subtitle, status, order_index } = body;
+      const newPage = await pool.query(
+        'INSERT INTO dashboard_pages (name, href, icon, subtitle, status, order_index) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        [name, href, icon, subtitle, status, order_index || 0]
+      );
+      return NextResponse.json(mapRow(newPage.rows[0], 'dashboard_pages'), { status: 201 });
+    }
+
     if (path === 'notifications/read-all') {
       await pool.query('UPDATE notifications SET read = TRUE');
       return NextResponse.json({ success: true });
+    }
+
+    // POST /api/beds/:id/discharge
+    if (path.startsWith('beds/') && path.endsWith('/discharge')) {
+      const bedId = route[1];
+      const bed = await Bed.findByIdAndUpdate(bedId, { status: 'available', patient: '', diagnosis: '', timer: 0 });
+      return NextResponse.json(bed);
+    }
+
+    // POST /api/beds/:id/clean
+    if (path.startsWith('beds/') && path.endsWith('/clean')) {
+      const bedId = route[1];
+      const { timer } = body;
+      const bed = await Bed.findByIdAndUpdate(bedId, { status: 'cleaning', timer: timer || 5 });
+      return NextResponse.json(bed);
+    }
+
+    // POST /api/beds/:id/reserve
+    if (path.startsWith('beds/') && path.endsWith('/reserve')) {
+      const bedId = route[1];
+      const { patient, diagnosis, timer, gender, age } = body;
+      const bed = await Bed.findByIdAndUpdate(bedId, {
+        status: 'occupied',
+        patient: patient || '',
+        diagnosis: diagnosis || '',
+        timer: timer || 0,
+        gender: gender || '',
+        age: age || null
+      });
+      return NextResponse.json(bed);
+    }
+
+    // POST /api/surgeries/:id/status
+    if (path.startsWith('surgeries/') && path.endsWith('/status')) {
+      const surgeryId = route[1];
+      const { status } = body;
+      const surgery = await Surgery.findByIdAndUpdate(surgeryId, { status });
+      return NextResponse.json(surgery);
+    }
+
+    // POST /api/appointments/:id/status
+    if (path.startsWith('appointments/') && path.endsWith('/status')) {
+      const apptId = route[1];
+      const { status } = body;
+      const appt = await Appointment.findByIdAndUpdate(apptId, { status });
+      return NextResponse.json(appt);
+    }
+
+    // POST /api/medications/:id/dispense
+    if (path.startsWith('medications/') && path.endsWith('/dispense')) {
+      const medId = route[1];
+      const { quantity } = body;
+      const med = await Medication.findById(medId);
+      if (med) {
+        const newQty = Math.max(0, med.quantity - (quantity || 1));
+        const status = newQty === 0 ? 'Out of Stock' : 'In Stock';
+        await Medication.findByIdAndUpdate(medId, { quantity: newQty, status });
+        return NextResponse.json({ success: true });
+      }
+      return NextResponse.json({ error: 'Medication not found' }, { status: 404 });
+    }
+
+    // POST /api/prescriptions/:id/dispense
+    if (path.startsWith('prescriptions/') && path.endsWith('/dispense')) {
+      const rxId = route[1];
+      const rx = await Prescription.findByIdAndUpdate(rxId, { status: 'dispensed' });
+      return NextResponse.json(rx);
     }
 
     // --- AI CHAT COPILOT INTEGRATION ---
@@ -582,6 +717,34 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ rout
       return NextResponse.json(appt);
     }
 
+    // PUT /api/pantry/inventory/:id
+    if (path.startsWith('pantry/inventory/')) {
+      const inventoryId = route[2];
+      const { stock, name, unit } = body;
+      const updatedItem = await pool.query(
+        'UPDATE pantry_inventory SET stock = $1, name = $2, unit = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4 RETURNING *',
+        [stock, name, unit, inventoryId]
+      );
+      if (updatedItem.rowCount === 0) {
+        return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+      }
+      return NextResponse.json(mapRow(updatedItem.rows[0], 'pantry_inventory'));
+    }
+
+    // PUT /api/pages/:id
+    if (path.startsWith('pages/')) {
+      const pageId = route[1];
+      const { name, href, icon, subtitle, status, order_index } = body;
+      const updatedPage = await pool.query(
+        'UPDATE dashboard_pages SET name = $1, href = $2, icon = $3, subtitle = $4, status = $5, order_index = $6, updated_at = CURRENT_TIMESTAMP WHERE id = $7 RETURNING *',
+        [name, href, icon, subtitle, status, order_index || 0, pageId]
+      );
+      if (updatedPage.rowCount === 0) {
+        return NextResponse.json({ error: 'Page not found' }, { status: 404 });
+      }
+      return NextResponse.json(mapRow(updatedPage.rows[0], 'dashboard_pages'));
+    }
+
     // PUT /api/medications/:id/dispense
     if (path.startsWith('medications/') && path.endsWith('/dispense')) {
       const medId = route[1];
@@ -616,6 +779,61 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ rout
       const orderId = route[1];
       const order = await PantryOrder.findByIdAndUpdate(orderId, body);
       return NextResponse.json(order);
+    }
+
+    // Generic PUT updates: PUT /api/:entity/:id
+    if (route.length === 2) {
+      const entity = route[0];
+      const id = route[1];
+
+      if (entity === 'patients') {
+        const item = await Patient.findByIdAndUpdate(id, body);
+        return NextResponse.json(item);
+      }
+      if (entity === 'doctors') {
+        const item = await Doctor.findByIdAndUpdate(id, body);
+        return NextResponse.json(item);
+      }
+      if (entity === 'staff') {
+        const item = await Staff.findByIdAndUpdate(id, body);
+        return NextResponse.json(item);
+      }
+      if (entity === 'appointments') {
+        const item = await Appointment.findByIdAndUpdate(id, body);
+        return NextResponse.json(item);
+      }
+      if (entity === 'beds') {
+        const item = await Bed.findByIdAndUpdate(id, body);
+        return NextResponse.json(item);
+      }
+      if (entity === 'surgeries') {
+        const item = await Surgery.findByIdAndUpdate(id, body);
+        return NextResponse.json(item);
+      }
+      if (entity === 'invoices') {
+        const item = await Invoice.findByIdAndUpdate(id, body);
+        return NextResponse.json(item);
+      }
+      if (entity === 'transactions') {
+        const item = await Transaction.findByIdAndUpdate(id, body);
+        return NextResponse.json(item);
+      }
+      if (entity === 'medications') {
+        const item = await Medication.findByIdAndUpdate(id, body);
+        return NextResponse.json(item);
+      }
+      if (entity === 'prescriptions') {
+        const item = await Prescription.findByIdAndUpdate(id, body);
+        return NextResponse.json(item);
+      }
+      if (entity === 'reports') {
+        const item = await Report.findByIdAndUpdate(id, body);
+        return NextResponse.json(item);
+      }
+      if (entity === 'diagnoses') {
+        const item = await Diagnosis.findByIdAndUpdate(id, body);
+        return NextResponse.json(item);
+      }
     }
 
     return NextResponse.json({ error: 'Not Found' }, { status: 404 });
@@ -678,9 +896,57 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
       return NextResponse.json({ success: true });
     }
 
+    if (path.startsWith('pantry/inventory/') && route.length === 3) {
+      const id = route[2];
+      const res = await pool.query('DELETE FROM pantry_inventory WHERE id = $1 RETURNING *', [id]);
+      if (res.rowCount === 0) {
+        return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+      }
+      return NextResponse.json(mapRow(res.rows[0], 'pantry_inventory'));
+    }
+
+    if (path.startsWith('pages/') && route.length === 2) {
+      const id = route[1];
+      const res = await pool.query('DELETE FROM dashboard_pages WHERE id = $1 RETURNING *', [id]);
+      if (res.rowCount === 0) {
+        return NextResponse.json({ error: 'Page not found' }, { status: 404 });
+      }
+      return NextResponse.json(mapRow(res.rows[0], 'dashboard_pages'));
+    }
+
     if (path.startsWith('diagnoses/') && route.length === 2) {
       const id = route[1];
       await Diagnosis.findByIdAndDelete(id);
+      return NextResponse.json({ success: true });
+    }
+
+    if (path.startsWith('medications/') && route.length === 2) {
+      const id = route[1];
+      await Medication.findByIdAndDelete(id);
+      return NextResponse.json({ success: true });
+    }
+
+    if (path.startsWith('prescriptions/') && route.length === 2) {
+      const id = route[1];
+      await Prescription.findByIdAndDelete(id);
+      return NextResponse.json({ success: true });
+    }
+
+    if (path.startsWith('reports/') && route.length === 2) {
+      const id = route[1];
+      await Report.findByIdAndDelete(id);
+      return NextResponse.json({ success: true });
+    }
+
+    if (path.startsWith('invoices/') && route.length === 2) {
+      const id = route[1];
+      await Invoice.findByIdAndDelete(id);
+      return NextResponse.json({ success: true });
+    }
+
+    if (path.startsWith('beds/') && route.length === 2) {
+      const id = route[1];
+      await Bed.findByIdAndDelete(id);
       return NextResponse.json({ success: true });
     }
 

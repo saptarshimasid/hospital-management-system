@@ -63,7 +63,7 @@ export default function AppointmentsPage() {
   // Form States
   const [formPatientName, setFormPatientName] = useState("");
   const [formDept, setFormDept] = useState("Cardiology");
-  const [formDoctor, setFormDoctor] = useState("Dr. Aisha Khan");
+  const [formDoctor, setFormDoctor] = useState("");
   const [formDate, setFormDate] = useState("");
   const [formTime, setFormTime] = useState("09:00");
   const [formGender, setFormGender] = useState("Male");
@@ -115,19 +115,21 @@ export default function AppointmentsPage() {
     }
   }
 
-  const deptDoctors: Record<string, string[]> = {
-    Cardiology: ["Dr. Aisha Khan"],
-    "Gen Medicine": ["Dr. Sarah Jenkins"],
-    Neurology: ["Dr. Helena Troy"],
-    Emergency: ["Dr. Jack Reed"],
-  };
+  // Build dynamic department-to-doctors mapping from fetched physicians
+  const deptDoctors: Record<string, string[]> = {};
+  physicians.forEach((p) => {
+    if (!deptDoctors[p.dept]) deptDoctors[p.dept] = [];
+    if (!deptDoctors[p.dept].includes(p.name)) deptDoctors[p.dept].push(p.name);
+  });
 
   useEffect(() => {
     // Dynamically update form doctor based on selected department
-    if (deptDoctors[formDept]) {
+    if (deptDoctors[formDept] && deptDoctors[formDept].length > 0) {
       setFormDoctor(deptDoctors[formDept][0]);
+    } else {
+      setFormDoctor("");
     }
-  }, [formDept]);
+  }, [formDept, physicians]);
 
   // GSAP animation for entry
   useEffect(() => {

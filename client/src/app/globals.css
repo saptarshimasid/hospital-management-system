@@ -91,14 +91,17 @@ body {
 
 /* Custom Scrollbars */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.02);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.4);
 }
 
 /* Lenis Smooth Scroll Configuration */
@@ -120,4 +123,56 @@ html.lenis, html.lenis body {
 
 .lenis.lenis-scrolling iframe {
   pointer-events: none;
+}
+
+/* Dialog / Modal scroll fix — Lenis hijacks window scroll,
+   so dialogs need explicit overflow-y + max-height to scroll
+   their form content. The overscroll-behavior: contain keeps
+   the scroll isolated inside the dialog. */
+dialog[open] {
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+  /* Ensure backdrop doesn't interfere with scroll */
+  overscroll-behavior: contain;
+}
+
+/* Apply styled scrollbar to native dialogs */
+dialog[open]::-webkit-scrollbar {
+  width: 6px;
+}
+dialog[open]::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+dialog[open]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}
+dialog[open]::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.4);
+}
+
+/* Modal & Dialog Input/Select/Textarea Hover States with brand blue */
+dialog input:not([disabled]):hover,
+dialog select:not([disabled]):hover,
+dialog textarea:not([disabled]):hover,
+[data-lenis-prevent] input:not([disabled]):hover,
+[data-lenis-prevent] select:not([disabled]):hover,
+[data-lenis-prevent] textarea:not([disabled]):hover {
+  border-color: rgba(0, 240, 255, 0.5) !important;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.2) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Secondary Cancel/Bordered Button Hover States inside modals */
+dialog button[class*="border"]:hover,
+[data-lenis-prevent] button[class*="border"]:hover {
+  border-color: rgba(0, 240, 255, 0.5) !important;
+  color: #00f0ff !important;
+  background: rgba(0, 240, 255, 0.05) !important;
+  transition: all 0.2s ease;
 }

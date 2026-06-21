@@ -28,7 +28,7 @@ function mapKeyToCol(key: string): string {
   return key;
 }
 
-function mapRow(row: any, tableName: string): any {
+export function mapRow(row: any, tableName: string): any {
   if (!row) return null;
   const doc: any = {};
   for (const [col, val] of Object.entries(row)) {
@@ -61,7 +61,9 @@ const tableFields: Record<string, string[]> = {
   staff: ['name', 'role', 'dept', 'status', 'img', 'gender', 'age', 'email', 'shift'],
   notifications: ['text', 'type', 'time', 'read'],
   pantry_orders: ['patient_name', 'room', 'item', 'quantity', 'status', 'delivery_time'],
-  diagnoses: ['patient_name', 'age', 'gender', 'doctor_name', 'test_type', 'test_date', 'results', 'status']
+  diagnoses: ['patient_name', 'age', 'gender', 'doctor_name', 'test_type', 'test_date', 'results', 'status'],
+  pantry_inventory: ['name', 'stock', 'unit'],
+  dashboard_pages: ['name', 'href', 'icon', 'subtitle', 'status', 'order_index']
 };
 
 // Apply build-time dynamic routes fields schema metadata
@@ -518,6 +520,155 @@ export async function dbInit() {
       )
     `);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS pantry_inventory (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL UNIQUE,
+        stock INTEGER DEFAULT 0,
+        unit TEXT DEFAULT 'plates',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS dashboard_pages (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        href TEXT NOT NULL UNIQUE,
+        icon TEXT NOT NULL,
+        subtitle TEXT,
+        status TEXT DEFAULT 'active',
+        order_index INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Seed dashboard pages if empty
+    const checkPages = await pool.query('SELECT COUNT(*) FROM dashboard_pages');
+    if (parseInt(checkPages.rows[0].count) === 0) {
+      console.log('[Supabase DB] Seeding default dashboard navigation pages...');
+      const defaultPages = [
+        { name: 'Dashboard', href: '/admin-dashboard', icon: 'LayoutDashboard', subtitle: 'Clinical Command Center', order_index: 1 },
+        { name: 'Appointments', href: '/admin-dashboard/appointments', icon: 'Calendar', subtitle: 'Patient Intake & Scheduling', order_index: 2 },
+        { name: 'Bed Availability', href: '/admin-dashboard/bed-availability', icon: 'Bed', subtitle: 'Bed Occupancy & Sanitation', order_index: 3 },
+        { name: 'OT', href: '/admin-dashboard/ot', icon: 'Scissors', subtitle: 'Surgical Suites & Cases', order_index: 4 },
+        { name: 'Doctor', href: '/admin-dashboard/doctor', icon: 'User', subtitle: 'Physician Registry', order_index: 5 },
+        { name: 'Patients', href: '/admin-dashboard/patients', icon: 'Users', subtitle: 'Admitted Patients', order_index: 6 },
+        { name: 'Staff', href: '/admin-dashboard/staff', icon: 'Briefcase', subtitle: 'Clinical Personnel Shifts', order_index: 7 },
+        { name: 'Pharmacy', href: '/admin-dashboard/pharmacy', icon: 'Pill', subtitle: 'Medications & Stock', order_index: 8 },
+        { name: 'Diagnosis', href: '/admin-dashboard/diagnosis', icon: 'Activity', subtitle: 'Laboratory Results', order_index: 9 },
+        { name: 'Pantry', href: '/admin-dashboard/pantry', icon: 'Utensils', subtitle: 'Diet & Meals', order_index: 10 },
+        { name: 'Billing', href: '/admin-dashboard/billing', icon: 'DollarSign', subtitle: 'Patient Ledger', order_index: 11 },
+        { name: 'Revenue', href: '/admin-dashboard/revenue', icon: 'TrendingUp', subtitle: 'Revenue Telemetry', order_index: 12 },
+        { name: 'Reports', href: '/admin-dashboard/reports', icon: 'BarChart', subtitle: 'Medical Records & Docs', order_index: 13 }
+      ];
+      for (const p of defaultPages) {
+        await pool.query(
+          'INSERT INTO dashboard_pages (name, href, icon, subtitle, order_index) VALUES ($1, $2, $3, $4, $5)',
+          [p.name, p.href, p.icon, p.subtitle, p.order_index]
+        );
+      }
+      console.log('[Supabase DB] Seeding default pages complete');
+    }
+
+    // Seed 570 beds if beds table is empty
+    const checkBeds = await pool.query('SELECT COUNT(*) FROM beds');
+    if (parseInt(checkBeds.rows[0].count) === 0) {
+      console.log('[Supabase DB] Seeding 570 hospital beds...');
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        
+        // 50 ICU beds
+        for (let i = 1; i <= 50; i++) {
+          const id = `ICU-${String(i).padStart(2, '0')}`;
+          await client.query(
+            'INSERT INTO beds (id, ward, status, patient, diagnosis, timer) VALUES ($1, $2, $3, $4, $5, $6)',
+            [id, 'ICU', 'available', '', '', 0]
+          );
+        }
+        
+        // 20 VIP suite rooms
+        for (let i = 1; i <= 20; i++) {
+          const id = `VIP-${String(i).padStart(2, '0')}`;
+          await client.query(
+            'INSERT INTO beds (id, ward, status, patient, diagnosis, timer) VALUES ($1, $2, $3, $4, $5, $6)',
+            [id, 'VIP', 'available', '', '', 0]
+          );
+        }
+        
+        // 200 Men\'s Ward beds (normal, under General ward)
+        for (let i = 1; i <= 200; i++) {
+          const id = `M-${String(i).padStart(3, '0')}`;
+          await client.query(
+            'INSERT INTO beds (id, ward, status, patient, diagnosis, timer) VALUES ($1, $2, $3, $4, $5, $6)',
+            [id, 'General', 'available', '', '', 0]
+          );
+        }
+
+        // 200 Women\'s Ward beds (normal, under General ward)
+        for (let i = 1; i <= 200; i++) {
+          const id = `W-${String(i).padStart(3, '0')}`;
+          await client.query(
+            'INSERT INTO beds (id, ward, status, patient, diagnosis, timer) VALUES ($1, $2, $3, $4, $5, $6)',
+            [id, 'General', 'available', '', '', 0]
+          );
+        }
+
+        // 50 ER beds (normal, under ER ward)
+        for (let i = 1; i <= 50; i++) {
+          const id = `ER-${String(i).padStart(2, '0')}`;
+          await client.query(
+            'INSERT INTO beds (id, ward, status, patient, diagnosis, timer) VALUES ($1, $2, $3, $4, $5, $6)',
+            [id, 'ER', 'available', '', '', 0]
+          );
+        }
+
+        // 50 Pediatric beds (normal, under Pediatrics ward)
+        for (let i = 1; i <= 50; i++) {
+          const id = `PED-${String(i).padStart(2, '0')}`;
+          await client.query(
+            'INSERT INTO beds (id, ward, status, patient, diagnosis, timer) VALUES ($1, $2, $3, $4, $5, $6)',
+            [id, 'Pediatrics', 'available', '', '', 0]
+          );
+        }
+
+        await client.query('COMMIT');
+        console.log('[Supabase DB] 570 beds seeded successfully');
+      } catch (e) {
+        await client.query('ROLLBACK');
+        console.error('[Supabase DB] Failed to seed beds:', e);
+      } finally {
+        client.release();
+      }
+    }
+
+    // Seed pantry items if pantry_inventory table is empty
+    const checkPantry = await pool.query('SELECT COUNT(*) FROM pantry_inventory');
+    if (parseInt(checkPantry.rows[0].count) === 0) {
+      console.log('[Supabase DB] Seeding pantry food inventory items...');
+      const defaultItems = [
+        { name: 'Chicken Meal', stock: 100, unit: 'plates' },
+        { name: 'Veg Meal', stock: 100, unit: 'plates' },
+        { name: 'Soup', stock: 150, unit: 'plates' },
+        { name: 'Idly', stock: 200, unit: 'plates' },
+        { name: 'Fried Rice (Chicken)', stock: 80, unit: 'plates' },
+        { name: 'Fried Rice (Veg)', stock: 80, unit: 'plates' },
+        { name: 'Tea', stock: 300, unit: 'cups' },
+        { name: 'Coffee', stock: 300, unit: 'cups' },
+        { name: 'Cookies', stock: 500, unit: 'pieces' }
+      ];
+      for (const item of defaultItems) {
+        await pool.query(
+          'INSERT INTO pantry_inventory (name, stock, unit) VALUES ($1, $2, $3)',
+          [item.name, item.stock, item.unit]
+        );
+      }
+      console.log('[Supabase DB] Pantry food inventory seeded successfully');
+    }
+
     // Create dynamic tables generated at build-time
     for (const tableName of dynamicRoutes.dynamicTables) {
       try {
@@ -557,6 +708,8 @@ export const Staff = makeModelInterface('staff');
 export const NotificationModel = makeModelInterface('notifications');
 export const PantryOrder = makeModelInterface('pantry_orders');
 export const Diagnosis = makeModelInterface('diagnoses');
+export const PantryInventory = makeModelInterface('pantry_inventory');
+export const DashboardPage = makeModelInterface('dashboard_pages');
 
 // Export dynamically built models
 const exportsMap: Record<string, any> = {};

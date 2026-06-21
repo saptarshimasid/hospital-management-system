@@ -64,7 +64,7 @@ export default function OTPage() {
   // Form states
   const [formPatientName, setFormPatientName] = useState("");
   const [formSuite, setFormSuite] = useState("OT Suite 1");
-  const [formSurgeon, setFormSurgeon] = useState("Dr. Aisha Khan");
+  const [formSurgeon, setFormSurgeon] = useState("");
   const [formProcedure, setFormProcedure] = useState("");
   const [formStartTime, setFormStartTime] = useState("09:00");
   const [formEndTime, setFormEndTime] = useState("11:00");
@@ -190,7 +190,7 @@ export default function OTPage() {
     // Reset Form
     setFormPatientName("");
     setFormSuite("OT Suite 1");
-    setFormSurgeon("Dr. Aisha Khan");
+    setFormSurgeon("");
     setFormProcedure("");
     setFormStartTime("09:00");
     setFormEndTime("11:00");
@@ -328,9 +328,11 @@ export default function OTPage() {
             <div className="w-9 h-9 rounded-xl bg-primary-container/15 flex items-center justify-center text-primary-container">
               <Scissors className="w-4 h-4" />
             </div>
-            <span className="text-[10px] text-tertiary-container font-bold flex items-center gap-0.5">
-              +14% <TrendingUp className="w-3 h-3" />
-            </span>
+            {totalProcedures > 0 && (
+              <span className="text-[10px] text-tertiary-container font-bold flex items-center gap-0.5">
+                <TrendingUp className="w-3 h-3" />
+              </span>
+            )}
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Total Procedures</p>
@@ -344,12 +346,12 @@ export default function OTPage() {
               <Activity className="w-4 h-4" />
             </div>
             <span className="text-[10px] text-secondary-container font-bold">
-              {Math.round((activeOTs / 8) * 100)}% load
+              {Math.round((activeOTs / 50) * 100)}% load
             </span>
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Active OTs</p>
-            <h3 className="text-xl font-bold mt-1">{activeOTs} / 8</h3>
+            <h3 className="text-xl font-bold mt-1">{activeOTs} / 50</h3>
           </div>
         </div>
 
@@ -609,10 +611,9 @@ export default function OTPage() {
                 onChange={(e) => setFormSuite(e.target.value)}
                 className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
               >
-                <option value="OT Suite 1">OT Suite 1</option>
-                <option value="OT Suite 2">OT Suite 2</option>
-                <option value="OT Suite 3">OT Suite 3</option>
-                <option value="OT Suite 4">OT Suite 4</option>
+                {Array.from({ length: 50 }, (_, i) => `OT Suite ${i + 1}`).map((suite) => (
+                  <option key={suite} value={suite}>{suite}</option>
+                ))}
               </select>
             </div>
             <div className="space-y-1">
@@ -622,10 +623,11 @@ export default function OTPage() {
                 onChange={(e) => setFormSurgeon(e.target.value)}
                 className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
               >
-                <option value="Dr. Aisha Khan">Dr. Aisha Khan</option>
-                <option value="Dr. Helena Troy">Dr. Helena Troy</option>
-                <option value="Dr. Sarah Jenkins">Dr. Sarah Jenkins</option>
-                <option value="Dr. Jack Reed">Dr. Jack Reed</option>
+                {surgeons.length > 0 ? surgeons.map((s) => (
+                  <option key={s.name} value={s.name}>{s.name}</option>
+                )) : (
+                  <option value="">No surgeons available</option>
+                )}
               </select>
             </div>
           </div>

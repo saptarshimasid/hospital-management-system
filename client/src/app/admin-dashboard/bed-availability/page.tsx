@@ -42,6 +42,7 @@ interface ToastMessage {
 
 export default function BedAvailabilityPage() {
   const [beds, setBeds] = useState<BedInfo[]>([]);
+  const [visibleCount, setVisibleCount] = useState<number>(30);
 
   const [wardFilter, setWardFilter] = useState<string>("all");
   const { searchQuery, setSearchQuery } = useContext(SearchContext);
@@ -64,6 +65,10 @@ export default function BedAvailabilityPage() {
     setDisplayDate(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     fetchBeds();
   }, []);
+
+  useEffect(() => {
+    setVisibleCount(30);
+  }, [wardFilter, searchQuery]);
 
   async function fetchBeds() {
     try {
@@ -326,7 +331,7 @@ export default function BedAvailabilityPage() {
               />
             </div>
             <div className="flex bg-surface-container/60 border border-white/5 rounded-lg p-0.5 text-[11px] font-medium">
-              {["all", "ICU", "ER", "General"].map((w) => (
+              {["all", "ICU", "ER", "General", "Pediatrics", "VIP"].map((w) => (
                 <button
                   key={w}
                   onClick={() => setWardFilter(w)}
@@ -342,17 +347,18 @@ export default function BedAvailabilityPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto max-h-[520px] pr-1 custom-scrollbar">
-            <AnimatePresence initial={false}>
-              {filteredBeds.map((bed) => (
-                <motion.div
-                  key={bed.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3 }}
-                  className={`glass-card p-5 rounded-2xl flex flex-col justify-between h-44 border relative overflow-hidden transition-all`}
+          <div className="overflow-y-auto max-h-[580px] pr-2 custom-scrollbar" data-lenis-prevent="">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <AnimatePresence initial={false}>
+                {filteredBeds.slice(0, visibleCount).map((bed) => (
+                  <motion.div
+                    key={bed.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.3 }}
+                    className={`glass-card p-5 rounded-2xl flex flex-col justify-between h-[12.5rem] border relative overflow-hidden transition-all`}
                   style={{
                     borderColor:
                       bed.status === "occupied"
@@ -429,8 +435,20 @@ export default function BedAvailabilityPage() {
                   </div>
                 </motion.div>
               ))}
-            </AnimatePresence>
+              </AnimatePresence>
+            </div>
           </div>
+
+          {filteredBeds.length > visibleCount && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={() => setVisibleCount((prev) => prev + 30)}
+                className="bg-surface-container-high border border-white/5 px-6 py-2 rounded-xl text-xs font-semibold text-primary hover:bg-surface-variant/40 hover:text-white transition-all active:scale-95 cursor-pointer"
+              >
+                Load More Beds ({filteredBeds.length - visibleCount} remaining)
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right Side: Ward Summary census list */}
@@ -445,6 +463,7 @@ export default function BedAvailabilityPage() {
                 { label: "Emergency Room", ward: "ER", color: "[#e8a317]" },
                 { label: "General Ward", ward: "General", color: "primary-container" },
                 { label: "Pediatric Wing", ward: "Pediatrics", color: "tertiary-container" },
+                { label: "VIP Suites", ward: "VIP", color: "secondary-container" },
               ].map(({ label, ward, color }) => {
                 const wardBeds = beds.filter((b) => b.ward.toUpperCase() === ward.toUpperCase());
                 const wardTotal = wardBeds.length;

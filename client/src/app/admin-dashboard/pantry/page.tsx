@@ -64,11 +64,17 @@ export default function PantryPage() {
   // Add Order Form State
   const [formPatientName, setFormPatientName] = useState("");
   const [formRoom, setFormRoom] = useState("");
-  const [formItem, setFormItem] = useState("Regular Diet Meal");
+  const [formItem, setFormItem] = useState("");
   const [formQuantity, setFormQuantity] = useState("1");
   const [formDeliveryTime, setFormDeliveryTime] = useState("ASAP");
   const [formStatus, setFormStatus] = useState<"Pending" | "Preparing" | "Delivered">("Pending");
   const [displayDate, setDisplayDate] = useState("");
+
+  // Inventory Stock State
+  const [inventory, setInventory] = useState<{ id: string; name: string; stock: number; unit: string }[]>([]);
+  const [newFoodName, setNewFoodName] = useState("");
+  const [newFoodStock, setNewFoodStock] = useState("");
+  const [newFoodUnit, setNewFoodUnit] = useState("plates");
 
   const statsContainerRef = useRef<HTMLDivElement>(null);
   const addDialogRef = useRef<HTMLDialogElement>(null);
@@ -78,7 +84,14 @@ export default function PantryPage() {
   useEffect(() => {
     setDisplayDate(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     fetchOrders();
+    fetchInventory();
   }, []);
+
+  useEffect(() => {
+    if (inventory.length > 0 && !formItem) {
+      setFormItem(inventory[0].name);
+    }
+  }, [inventory, formItem]);
 
   // GSAP animation
   useEffect(() => {
@@ -144,6 +157,75 @@ export default function PantryPage() {
     }
   };
 
+  const fetchInventory = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/pantry/inventory`);
+      if (res.ok) {
+        const data = await res.json();
+        setInventory(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch pantry inventory", err);
+    }
+  };
+
+  const handleUpdateStock = async (id: string, newStock: number) => {
+    try {
+      const item = inventory.find(i => i.id === id);
+      if (!item) return;
+      const res = await fetch(`${API_BASE}/api/pantry/inventory/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stock: newStock, name: item.name, unit: item.unit })
+      });
+      if (res.ok) {
+        fetchInventory();
+      }
+    } catch (err) {
+      console.error("Failed to update stock", err);
+    }
+  };
+
+  const handleAddFood = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFoodName.trim()) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/pantry/inventory`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newFoodName,
+          stock: parseInt(newFoodStock) || 0,
+          unit: newFoodUnit
+        })
+      });
+      if (res.ok) {
+        triggerToast("Item Added", `${newFoodName} has been added to pantry inventory.`);
+        setNewFoodName("");
+        setNewFoodStock("");
+        fetchInventory();
+      }
+    } catch (err) {
+      console.error(err);
+      triggerToast("Error", "Failed to add food item to inventory.", "error");
+    }
+  };
+
+  const handleDeleteInventoryItem = async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/pantry/inventory/${id}`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        triggerToast("Item Removed", "Food item removed from inventory.", "error");
+        fetchInventory();
+      }
+    } catch (err) {
+      console.error(err);
+      triggerToast("Error", "Failed to remove food item.", "error");
+    }
+  };
+
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -167,12 +249,13 @@ export default function PantryPage() {
       
       triggerToast("Order Created", `Successfully logged pantry request for Room ${formRoom}.`);
       fetchOrders();
+      fetchInventory();
       setShowAddModal(false);
       
       // Reset
       setFormPatientName("");
       setFormRoom("");
-      setFormItem("Regular Diet Meal");
+      setFormItem(inventory[0]?.name || "");
       setFormQuantity("1");
       setFormDeliveryTime("ASAP");
       setFormStatus("Pending");
@@ -317,109 +400,204 @@ export default function PantryPage() {
         </div>
       </div>
 
-      {/* Filter and Table Section */}
-      <div className="glass-panel p-6 rounded-2xl space-y-6 bg-surface-container/20 border border-white/5">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4 opacity-60" />
-            <input
-              type="text"
-              placeholder="Search by patient, room, or meal..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 pl-11 pr-4 text-xs focus:ring-1 focus:ring-primary/50 text-on-surface placeholder-on-surface-variant/40 focus:outline-none"
-            />
+      {/* Two-Column Workspace Layout */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Left Column: Orders list table (col-span-12 lg:col-span-8) */}
+        <div className="col-span-12 lg:col-span-8 glass-panel p-6 rounded-2xl space-y-6 bg-surface-container/20 border border-white/5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4 opacity-60" />
+              <input
+                type="text"
+                placeholder="Search by patient, room, or meal..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 pl-11 pr-4 text-xs focus:ring-1 focus:ring-primary/50 text-on-surface placeholder-on-surface-variant/40 focus:outline-none"
+              />
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-on-surface-variant" />
+                <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Status</span>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="bg-[#0b1326] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-pointer"
+                >
+                  <option value="all">All statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="preparing">Preparing</option>
+                  <option value="delivered">Delivered</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-on-surface-variant" />
-              <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Status</span>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-[#0b1326] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-pointer"
-              >
-                <option value="all">All statuses</option>
-                <option value="pending">Pending</option>
-                <option value="preparing">Preparing</option>
-                <option value="delivered">Delivered</option>
-              </select>
-            </div>
+          {/* Table view */}
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="text-on-surface-variant/80 border-b border-white/5 font-medium uppercase tracking-wider text-[9px]">
+                  <th className="pb-3.5">Patient Name</th>
+                  <th className="pb-3.5">Room</th>
+                  <th className="pb-3.5">Requested Item</th>
+                  <th className="pb-3.5">Qty</th>
+                  <th className="pb-3.5">Target Time</th>
+                  <th className="pb-3.5">Status</th>
+                  <th className="pb-3.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-8 font-mono text-primary/70">
+                      SYNCHRONIZING DIETARY LOGS...
+                    </td>
+                  </tr>
+                ) : filteredOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-8 text-on-surface-variant opacity-60">
+                      No active dietary requests.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredOrders.map((order) => (
+                    <tr key={order.id} className="hover:bg-white/5 transition-colors group">
+                      <td className="py-3.5 font-bold text-on-surface">{order.patientName}</td>
+                      <td className="py-3.5 text-primary-container font-mono">{order.room}</td>
+                      <td className="py-3.5 text-on-surface">{order.item}</td>
+                      <td className="py-3.5 font-bold">{order.quantity}</td>
+                      <td className="py-3.5 text-on-surface-variant">{order.deliveryTime}</td>
+                      <td className="py-3.5">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${getStatusStyle(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {order.status !== "Delivered" && (
+                            <button
+                              onClick={() => handleStatusChange(order.id, order.status === "Pending" ? "Preparing" : "Delivered")}
+                              className="px-2.5 py-1 rounded-lg bg-surface-container border border-white/5 hover:bg-tertiary-container/10 text-on-surface-variant hover:text-tertiary-container text-[10px] font-semibold transition-all cursor-pointer"
+                            >
+                              {order.status === "Pending" ? "Start Prep" : "Mark Delivered"}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="p-1.5 rounded-lg bg-surface-container border border-white/5 hover:bg-primary-container/10 hover:border-primary-container/20 text-on-surface-variant hover:text-primary-container transition-all cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteOrder(order.id, order.room)}
+                            className="p-1.5 rounded-lg bg-surface-container border border-white/5 hover:bg-error/10 hover:border-error/20 text-on-surface-variant hover:text-error transition-all cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Table view */}
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="text-on-surface-variant/80 border-b border-white/5 font-medium uppercase tracking-wider text-[9px]">
-                <th className="pb-3.5">Patient Name</th>
-                <th className="pb-3.5">Room</th>
-                <th className="pb-3.5">Requested Item</th>
-                <th className="pb-3.5">Qty</th>
-                <th className="pb-3.5">Target Time</th>
-                <th className="pb-3.5">Status</th>
-                <th className="pb-3.5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-8 font-mono text-primary/70">
-                    SYNCHRONIZING DIETARY LOGS...
-                  </td>
-                </tr>
-              ) : filteredOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-8 text-on-surface-variant opacity-60">
-                    No active dietary requests.
-                  </td>
-                </tr>
+        {/* Right Column: Menu Stock Inventory (col-span-12 lg:col-span-4) */}
+        <div className="col-span-12 lg:col-span-4 glass-panel p-6 rounded-2xl bg-surface-container/20 border border-white/5 flex flex-col h-full min-h-[500px] justify-between">
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-sm font-bold text-primary flex items-center gap-1.5">
+                <Utensils className="w-4 h-4 text-primary" />
+                Pantry Inventory
+              </h4>
+              <p className="text-[10px] text-on-surface-variant mt-0.5">Manage plate stock & beverage counts</p>
+            </div>
+
+            {/* List of food stock */}
+            <div className="space-y-3.5 max-h-[340px] overflow-y-auto pr-1 custom-scrollbar" data-lenis-prevent="">
+              {inventory.length === 0 ? (
+                <p className="text-xs text-on-surface-variant italic opacity-60">No stock records found.</p>
               ) : (
-                filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="py-3.5 font-bold text-on-surface">{order.patientName}</td>
-                    <td className="py-3.5 text-primary-container font-mono">{order.room}</td>
-                    <td className="py-3.5 text-on-surface">{order.item}</td>
-                    <td className="py-3.5 font-bold">{order.quantity}</td>
-                    <td className="py-3.5 text-on-surface-variant">{order.deliveryTime}</td>
-                    <td className="py-3.5">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${getStatusStyle(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="py-3.5 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {order.status !== "Delivered" && (
-                          <button
-                            onClick={() => handleStatusChange(order.id, order.status === "Pending" ? "Preparing" : "Delivered")}
-                            className="px-2.5 py-1 rounded-lg bg-surface-container border border-white/5 hover:bg-tertiary-container/10 text-on-surface-variant hover:text-tertiary-container text-[10px] font-semibold transition-all cursor-pointer"
-                          >
-                            {order.status === "Pending" ? "Start Prep" : "Mark Delivered"}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setSelectedOrder(order)}
-                          className="p-1.5 rounded-lg bg-surface-container border border-white/5 hover:bg-primary-container/10 hover:border-primary-container/20 text-on-surface-variant hover:text-primary-container transition-all cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteOrder(order.id, order.room)}
-                          className="p-1.5 rounded-lg bg-surface-container border border-white/5 hover:bg-error/10 hover:border-error/20 text-on-surface-variant hover:text-error transition-all cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                inventory.map((item) => (
+                  <div key={item.id} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5 group hover:border-white/10 transition-all">
+                    <div className="flex-1 min-w-0 pr-2">
+                      <p className="text-xs font-bold text-on-surface truncate">{item.name}</p>
+                      <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-mono mt-0.5">
+                        {item.stock} {item.unit}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 opacity-65 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleUpdateStock(item.id, Math.max(0, item.stock - 1))}
+                        className="w-6 h-6 rounded-lg bg-surface-container border border-white/5 flex items-center justify-center hover:bg-error/10 hover:text-error text-xs font-bold transition-all cursor-pointer"
+                      >
+                        -
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStock(item.id, item.stock + 1)}
+                        className="w-6 h-6 rounded-lg bg-surface-container border border-white/5 flex items-center justify-center hover:bg-tertiary-container/10 hover:text-tertiary-container text-xs font-bold transition-all cursor-pointer"
+                      >
+                        +
+                      </button>
+                      <button
+                        onClick={() => handleDeleteInventoryItem(item.id)}
+                        className="p-1 rounded-lg hover:bg-error/10 hover:border-error/20 text-on-surface-variant hover:text-error transition-all cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 ))
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
+
+          {/* Add custom food item form */}
+          <form onSubmit={handleAddFood} className="border-t border-white/5 pt-4 mt-4 space-y-3">
+            <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Add Custom Item</p>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                required
+                placeholder="e.g. Tea"
+                value={newFoodName}
+                onChange={(e) => setNewFoodName(e.target.value)}
+                className="bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff]"
+              />
+              <div className="flex gap-1.5">
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  placeholder="Qty"
+                  value={newFoodStock}
+                  onChange={(e) => setNewFoodStock(e.target.value)}
+                  className="w-16 bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-2 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff]"
+                />
+                <select
+                  value={newFoodUnit}
+                  onChange={(e) => setNewFoodUnit(e.target.value)}
+                  className="flex-1 bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-1 text-xs text-on-surface focus:outline-none cursor-pointer"
+                >
+                  <option value="plates">plates</option>
+                  <option value="cups">cups</option>
+                  <option value="pieces">pieces</option>
+                </select>
+              </div>
+            </div>
+            <button
+              type="submit"
+              className="w-full py-2 rounded-xl bg-gradient-to-r from-primary-container to-secondary-container text-on-primary font-bold text-xs hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              Add Item
+            </button>
+          </form>
         </div>
       </div>
 
@@ -502,11 +680,15 @@ export default function PantryPage() {
               onChange={(e) => setFormItem(e.target.value)}
               className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
             >
-              <option value="Regular Diet Meal">Regular Diet Meal</option>
-              <option value="Liquid Diet (Broth + Apple Juice)">Liquid Diet (Broth + Apple Juice)</option>
-              <option value="Soft Non-Chew Diet Meal">Soft Non-Chew Diet Meal</option>
-              <option value="Low-Sodium Diabetic Lunch">Low-Sodium Diabetic Lunch</option>
-              <option value="High-Protein Recovery Meal">High-Protein Recovery Meal</option>
+              {inventory.length > 0 ? (
+                inventory.map(item => (
+                  <option key={item.id} value={item.name}>
+                    {item.name} ({item.stock} {item.unit} available)
+                  </option>
+                ))
+              ) : (
+                <option value="">No items in inventory</option>
+              )}
             </select>
           </div>
 

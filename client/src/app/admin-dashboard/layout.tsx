@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, createContext } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import * as Lucide from "lucide-react";
 import {
   LayoutDashboard,
   Calendar,
@@ -46,6 +47,43 @@ export default function DashboardLayout({
   const [searchQuery, setSearchQuery] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // User Profile State and Modal controls
+  const [profile, setProfile] = useState({
+    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o",
+    name: "Dr. Sarah Jenkins",
+    age: 42,
+    email: "sarah.jenkins@hospital.com",
+    designation: "Chief Medical Officer"
+  });
+
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileDialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("user_profile");
+    if (saved) {
+      try {
+        setProfile(JSON.parse(saved));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
+
+  const saveProfile = (newProfile: typeof profile) => {
+    setProfile(newProfile);
+    localStorage.setItem("user_profile", JSON.stringify(newProfile));
+  };
+
+  useEffect(() => {
+    if (profileOpen) {
+      profileDialogRef.current?.showModal();
+    } else {
+      profileDialogRef.current?.close();
+    }
+  }, [profileOpen]);
+
   interface DBNotification {
     _id?: string;
     id?: string;
@@ -126,22 +164,40 @@ export default function DashboardLayout({
     }
   };
 
-  const navigationItems = [
-    { name: "Dashboard", href: "/admin-dashboard", icon: LayoutDashboard },
-    { name: "Appointments", href: "/admin-dashboard/appointments", icon: Calendar },
-    { name: "Bed Availability", href: "/admin-dashboard/bed-availability", icon: Bed },
-    { name: "OT", href: "/admin-dashboard/ot", icon: Scissors },
-    { name: "Doctor", href: "/admin-dashboard/doctor", icon: User },
-    { name: "Patients", href: "/admin-dashboard/patients", icon: Users },
-    { name: "Staff", href: "/admin-dashboard/staff", icon: Briefcase },
-    { name: "Pharmacy", href: "/admin-dashboard/pharmacy", icon: Pill },
-    { name: "Diagnosis", href: "/admin-dashboard/diagnosis", icon: Activity },
-    { name: "Pantry", href: "/admin-dashboard/pantry", icon: Utensils },
-    { name: "Billing", href: "/admin-dashboard/billing", icon: DollarSign },
-    { name: "Revenue", href: "/admin-dashboard/revenue", icon: TrendingUp },
-    { name: "Reports", href: "/admin-dashboard/reports", icon: BarChart },
-    { name: "Settings", href: "#", icon: Settings },
-  ];
+  const [navigationItems, setNavigationItems] = useState<any[]>([]);
+
+  const fetchPages = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/pages`);
+      if (res.ok) {
+        const data = await res.json();
+        setNavigationItems(data);
+      } else {
+        throw new Error();
+      }
+    } catch (e) {
+      setNavigationItems([
+        { name: "Dashboard", href: "/admin-dashboard", icon: "LayoutDashboard", status: "active" },
+        { name: "Appointments", href: "/admin-dashboard/appointments", icon: "Calendar", status: "active" },
+        { name: "Bed Availability", href: "/admin-dashboard/bed-availability", icon: "Bed", status: "active" },
+        { name: "OT", href: "/admin-dashboard/ot", icon: "Scissors", status: "active" },
+        { name: "Doctor", href: "/admin-dashboard/doctor", icon: "User", status: "active" },
+        { name: "Patients", href: "/admin-dashboard/patients", icon: "Users", status: "active" },
+        { name: "Staff", href: "/admin-dashboard/staff", icon: "Briefcase", status: "active" },
+        { name: "Pharmacy", href: "/admin-dashboard/pharmacy", icon: "Pill", status: "active" },
+        { name: "Diagnosis", href: "/admin-dashboard/diagnosis", icon: "Activity", status: "active" },
+        { name: "Pantry", href: "/admin-dashboard/pantry", icon: "Utensils", status: "active" },
+        { name: "Billing", href: "/admin-dashboard/billing", icon: "DollarSign", status: "active" },
+        { name: "Revenue", href: "/admin-dashboard/revenue", icon: "TrendingUp", status: "active" },
+        { name: "Reports", href: "/admin-dashboard/reports", icon: "BarChart", status: "active" },
+        { name: "Settings", href: "#", icon: "Settings", status: "active" },
+      ]);
+    }
+  };
+
+  useEffect(() => {
+    fetchPages();
+  }, []);
 
   return (
     <SearchContext.Provider value={{ searchQuery, setSearchQuery }}>
@@ -171,8 +227,10 @@ export default function DashboardLayout({
           </div>
 
           <nav className="flex-1 space-y-0.5 overflow-y-auto custom-scrollbar">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
+            {navigationItems.filter(item => item.status !== "inactive").map((item) => {
+              const IconComponent = typeof item.icon === "string"
+                ? ((Lucide as any)[item.icon] || Lucide.HelpCircle)
+                : item.icon;
               const isActive = pathname === item.href;
               return (
                 <Link
@@ -185,7 +243,7 @@ export default function DashboardLayout({
                       : "text-on-surface-variant hover:text-on-surface hover:bg-white/5"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <IconComponent className="w-4 h-4" />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -193,15 +251,18 @@ export default function DashboardLayout({
           </nav>
 
           <div className="mt-auto px-4 pt-4 border-t border-white/5">
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-high/40 border border-white/5">
+            <div
+              onClick={() => setProfileOpen(true)}
+              className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-high/40 border border-white/5 cursor-pointer hover:bg-white/5 transition-all"
+            >
               <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o"
+                src={profile.img}
                 alt="Profile Portrait"
                 className="w-10 h-10 rounded-full border border-primary/20 object-cover"
               />
               <div className="overflow-hidden">
-                <p className="text-xs font-bold truncate">Dr. Sarah Jenkins</p>
-                <p className="text-[9px] uppercase tracking-wider text-primary opacity-70">Chief Medical Officer</p>
+                <p className="text-xs font-bold truncate">{profile.name}</p>
+                <p className="text-[9px] uppercase tracking-wider text-primary opacity-70">{profile.designation}</p>
               </div>
             </div>
           </div>
@@ -306,8 +367,11 @@ export default function DashboardLayout({
                 )}
               </AnimatePresence>
             </div>
-            <button className="w-10 h-10 flex items-center justify-center rounded-full overflow-hidden border border-white/10 hover:bg-white/5 transition-all">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o" alt="Profile" className="w-full h-full object-cover" />
+            <button
+              onClick={() => setProfileOpen(true)}
+              className="w-10 h-10 flex items-center justify-center rounded-full overflow-hidden border border-white/10 hover:bg-white/5 transition-all cursor-pointer"
+            >
+              <img src={profile.img} alt="Profile" className="w-full h-full object-cover" />
             </button>
             <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:text-error hover:bg-white/5 transition-all border border-white/5">
               <LogOut className="w-4 h-4" />
@@ -322,6 +386,143 @@ export default function DashboardLayout({
 
         {/* Floating AI Clinical Copilot Chat Widget */}
         <CopilotChat />
+
+        {/* Unified User Profile Dialog Modal */}
+        <dialog
+          ref={profileDialogRef}
+          onClose={() => setProfileOpen(false)}
+          className="glass-card p-6 rounded-2xl w-full max-w-md bg-[#0b1326]/95 border border-white/10 text-[#dae2fd] shadow-2xl backdrop-blur-xl focus:outline-none m-auto backdrop:bg-[#0b1326]/60 backdrop:backdrop-blur-sm"
+          onClick={(e) => {
+            const rect = profileDialogRef.current?.getBoundingClientRect();
+            if (rect) {
+              const isInDialog = (
+                e.clientX >= rect.left &&
+                e.clientX <= rect.right &&
+                e.clientY >= rect.top &&
+                e.clientY <= rect.bottom
+              );
+              if (!isInDialog) setProfileOpen(false);
+            }
+          }}
+        >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f0ff] to-transparent" />
+          <div className="flex justify-between items-center mb-6 pb-2 border-b border-white/5">
+            <div>
+              <h3 className="text-sm font-bold text-primary">Edit User Profile</h3>
+              <p className="text-[10px] text-on-surface-variant">Update your administrative clinical credentials</p>
+            </div>
+            <button
+              onClick={() => setProfileOpen(false)}
+              className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/5 text-on-surface-variant hover:text-error transition-all cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setProfileOpen(false);
+            }}
+            className="space-y-4"
+          >
+            {/* Image Upload Option */}
+            <div className="space-y-2">
+              <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Profile Portrait</label>
+              <div className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/10">
+                <img
+                  src={profile.img}
+                  alt="Portrait Preview"
+                  className="w-12 h-12 rounded-full border border-primary/20 object-cover bg-black/20"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o";
+                  }}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] text-[#00f0ff] truncate font-mono">
+                    {profile.img.startsWith("data:") ? "Uploaded Local Image File" : "Default Image"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative flex items-center justify-center border border-dashed border-white/20 hover:border-[#00f0ff]/50 rounded-xl p-3 bg-white/2 hover:bg-[#00f0ff]/5 transition-all cursor-pointer group">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        saveProfile({ ...profile, img: reader.result as string });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                />
+                <div className="text-center space-y-1 pointer-events-none">
+                  <span className="material-symbols-outlined text-[#00f0ff]/80 group-hover:scale-110 transition-transform">cloud_upload</span>
+                  <p className="text-[10px] text-on-surface-variant font-semibold">Change Portrait</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Name</label>
+              <input
+                type="text"
+                required
+                value={profile.name}
+                onChange={(e) => saveProfile({ ...profile, name: e.target.value })}
+                className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Age</label>
+                <input
+                  type="number"
+                  required
+                  value={profile.age}
+                  onChange={(e) => saveProfile({ ...profile, age: parseInt(e.target.value) || 0 })}
+                  className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Designation</label>
+                <input
+                  type="text"
+                  required
+                  value={profile.designation}
+                  onChange={(e) => saveProfile({ ...profile, designation: e.target.value })}
+                  className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Email Address</label>
+              <input
+                type="email"
+                required
+                value={profile.email}
+                onChange={(e) => saveProfile({ ...profile, email: e.target.value })}
+                className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]"
+              />
+            </div>
+
+            <div className="flex justify-end pt-4 border-t border-white/5 mt-6">
+              <button
+                type="submit"
+                className="bg-gradient-to-r from-primary-container to-[#14d1ff] text-on-primary font-bold px-5 py-2.5 rounded-xl text-xs hover:brightness-110 active:scale-[0.98] transition-all active-glow cursor-pointer"
+              >
+                Save Profile Changes
+              </button>
+            </div>
+          </form>
+        </dialog>
       </div>
     </SmoothScroll>
   </SearchContext.Provider>

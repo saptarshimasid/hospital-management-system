@@ -2,6 +2,9 @@
   "name": "health-copilot-monorepo",
   "version": "1.0.0",
   "description": "Health Copilot Next.js Web App with integrated Supabase Database and Gemini AI API.",
+  "workspaces": [
+    "client"
+  ],
   "scripts": {
     "dev": "npm run dev --prefix client",
     "build": "npm run build --prefix client",

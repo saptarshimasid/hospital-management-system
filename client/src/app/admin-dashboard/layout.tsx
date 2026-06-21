@@ -49,14 +49,15 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // User Profile State and Modal controls
-  const [profile, setProfile] = useState({
+  const defaultProfile = {
     img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o",
     name: "Dr. Sarah Jenkins",
     age: 42,
     email: "sarah.jenkins@hospital.com",
     designation: "Chief Medical Officer"
-  });
+  };
 
+  const [profile, setProfile] = useState(defaultProfile);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileDialogRef = useRef<HTMLDialogElement>(null);
 
@@ -64,23 +65,39 @@ export default function DashboardLayout({
     const saved = localStorage.getItem("user_profile");
     if (saved) {
       try {
-        setProfile(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          setProfile({
+            img: typeof parsed.img === "string" ? parsed.img : defaultProfile.img,
+            name: typeof parsed.name === "string" ? parsed.name : defaultProfile.name,
+            age: typeof parsed.age === "number" ? parsed.age : (parseInt(parsed.age) || defaultProfile.age),
+            email: typeof parsed.email === "string" ? parsed.email : defaultProfile.email,
+            designation: typeof parsed.designation === "string" ? parsed.designation : defaultProfile.designation
+          });
+        }
       } catch (e) {
-        console.error(e);
+        console.error("Error loading user profile from localStorage:", e);
       }
     }
   }, []);
 
-  const saveProfile = (newProfile: typeof profile) => {
+  const saveProfile = (newProfile: typeof defaultProfile) => {
     setProfile(newProfile);
     localStorage.setItem("user_profile", JSON.stringify(newProfile));
   };
 
   useEffect(() => {
+    const dialog = profileDialogRef.current;
+    if (!dialog) return;
+
     if (profileOpen) {
-      profileDialogRef.current?.showModal();
+      if (!dialog.open) {
+        dialog.showModal();
+      }
     } else {
-      profileDialogRef.current?.close();
+      if (dialog.open) {
+        dialog.close();
+      }
     }
   }, [profileOpen]);
 

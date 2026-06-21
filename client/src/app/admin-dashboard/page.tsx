@@ -105,7 +105,13 @@ export default function Dashboard() {
   async function fetchMetrics() {
     try {
       const res = await fetch(`${API_BASE}/api/metrics`);
+      if (!res.ok) {
+        throw new Error(`API returned status ${res.status}`);
+      }
       const data = await res.json();
+      if (data.error || !data.stats) {
+        throw new Error(data.error || "Invalid metrics data structure");
+      }
       setMetrics(data);
     } catch (err) {
       console.error("Failed to load metrics, using fallback client data", err);

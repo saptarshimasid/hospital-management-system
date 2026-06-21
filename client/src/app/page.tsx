@@ -15,6 +15,7 @@ export default function Home() {
   const [displayDate, setDisplayDate] = useState("");
   const [currentTime, setCurrentTime] = useState("");
   const [temperature, setTemperature] = useState("21°C / 70°F");
+  const [weatherDesc, setWeatherDesc] = useState("Clear Sky");
   const router = useRouter();
 
   const handleComplete = useCallback(() => {
@@ -34,7 +35,44 @@ export default function Home() {
       );
     };
 
+    const fetchWeather = async () => {
+      try {
+        const geoRes = await fetch("https://ipapi.co/json/");
+        if (!geoRes.ok) throw new Error("Geo IP lookup failed");
+        const geoData = await geoRes.json();
+        const lat = geoData.latitude || 22.5726;
+        const lon = geoData.longitude || 88.3639;
+
+        const weatherRes = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`
+        );
+        if (!weatherRes.ok) throw new Error("Weather fetch failed");
+        const weatherData = await weatherRes.json();
+        const current = weatherData.current;
+        if (current) {
+          const tempC = Math.round(current.temperature_2m);
+          const tempF = Math.round((tempC * 9) / 5 + 32);
+          setTemperature(`${tempC}°C / ${tempF}°F`);
+
+          const code = current.weather_code;
+          let desc = "Clear Sky";
+          if (code === 0) desc = "Clear Sky";
+          else if (code >= 1 && code <= 3) desc = "Partly Cloudy";
+          else if (code === 45 || code === 48) desc = "Foggy";
+          else if (code >= 51 && code <= 55) desc = "Drizzle";
+          else if (code >= 61 && code <= 65) desc = "Rainy";
+          else if (code >= 71 && code <= 75) desc = "Snowy";
+          else if (code >= 80 && code <= 82) desc = "Rain Showers";
+          else if (code >= 95) desc = "Thunderstorm";
+          setWeatherDesc(desc);
+        }
+      } catch (err) {
+        console.error("Failed to load dynamic weather:", err);
+      }
+    };
+
     updateClock();
+    fetchWeather();
     const interval = setInterval(updateClock, 1000);
     return () => clearInterval(interval);
   }, [loading]);
@@ -100,7 +138,7 @@ export default function Home() {
                 <span className="w-1 h-1 rounded-full bg-white/20" />
                 <span className="flex items-center gap-1 text-primary-container font-semibold">
                   <span className="material-symbols-outlined !text-xs">thermostat</span>
-                  <span>{temperature} • Clear Sky</span>
+                  <span>{temperature} • {weatherDesc}</span>
                 </span>
               </div>
             )}

@@ -145,7 +145,6 @@ export default function StaffPage() {
       }
     } catch (err) {
       console.error("Failed to fetch staff", err);
-      triggerToast("Network Error", "Could not retrieve staff data from Database.", "error");
     } finally {
       setLoading(false);
     }

@@ -89,7 +89,6 @@ export default function ReportsPage() {
       }
     } catch (err) {
       console.error("Failed to fetch reports", err);
-      triggerToast("Network Error", "Could not fetch reports from Database.", "error");
     } finally {
       setLoading(false);
     }

@@ -279,7 +279,6 @@ export default function AdminConsolePage() {
       }
     } catch (err: any) {
       console.error(err);
-      triggerToast("Connection Error", `Could not retrieve records for ${activeCollection.label}.`, "error");
     } finally {
       setLoading(false);
     }

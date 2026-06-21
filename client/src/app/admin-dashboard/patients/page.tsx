@@ -140,7 +140,6 @@ export default function PatientsPage() {
       }
     } catch (err) {
       console.error("Failed to fetch patients", err);
-      triggerToast("Network Error", "Could not retrieve patient data from Database.", "error");
     } finally {
       setLoading(false);
     }

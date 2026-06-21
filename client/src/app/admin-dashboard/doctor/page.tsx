@@ -143,7 +143,6 @@ export default function DoctorPage() {
       }
     } catch (err) {
       console.error("Failed to fetch doctors", err);
-      triggerToast("Network Error", "Could not retrieve doctor data from Database.", "error");
     } finally {
       setLoading(false);
     }

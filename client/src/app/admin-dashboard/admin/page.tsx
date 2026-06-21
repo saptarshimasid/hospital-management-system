@@ -274,11 +274,30 @@ export default function AdminConsolePage() {
       if (res.ok) {
         const data = await res.json();
         setRecords(data);
+        localStorage.setItem(`local_collection_${activeCollectionId}`, JSON.stringify(data));
       } else {
         throw new Error(`Failed with status ${res.status}`);
       }
     } catch (err: any) {
       console.error(err);
+      const saved = localStorage.getItem(`local_collection_${activeCollectionId}`);
+      if (saved) {
+        setRecords(JSON.parse(saved));
+      } else {
+        const mappingKeys: Record<string, string> = {
+          patients: "local_patients",
+          doctors: "local_doctors",
+          staff: "local_staff",
+          appointments: "local_appointments"
+        };
+        const fallbackKey = mappingKeys[activeCollectionId];
+        const savedPageData = fallbackKey ? localStorage.getItem(fallbackKey) : null;
+        if (savedPageData) {
+          setRecords(JSON.parse(savedPageData));
+        } else {
+          setRecords([]);
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -330,7 +349,18 @@ export default function AdminConsolePage() {
       }
     } catch (err: any) {
       console.error(err);
-      triggerToast("Deletion Error", err.message || "Failed to remove the record.", "error");
+      const mappingKeys: Record<string, string> = {
+        patients: "local_patients",
+        doctors: "local_doctors",
+        staff: "local_staff",
+        appointments: "local_appointments"
+      };
+      const pageKey = mappingKeys[activeCollectionId] || `local_collection_${activeCollectionId}`;
+      const updatedRecords = records.filter(r => (r._id || r.id) !== recId);
+      setRecords(updatedRecords);
+      localStorage.setItem(`local_collection_${activeCollectionId}`, JSON.stringify(updatedRecords));
+      localStorage.setItem(pageKey, JSON.stringify(updatedRecords));
+      triggerToast("Deleted (Local)", `Successfully removed record locally.`, "warning");
     }
   };
 
@@ -376,7 +406,30 @@ export default function AdminConsolePage() {
       }
     } catch (err: any) {
       console.error(err);
-      triggerToast("Database Error", err.message || "Could not save the record.", "error");
+      let updatedRecords;
+      const mappingKeys: Record<string, string> = {
+        patients: "local_patients",
+        doctors: "local_doctors",
+        staff: "local_staff",
+        appointments: "local_appointments"
+      };
+      const pageKey = mappingKeys[activeCollectionId] || `local_collection_${activeCollectionId}`;
+      
+      if (isEditMode) {
+        updatedRecords = records.map(r => (r._id || r.id) === recId ? { ...r, ...payload } : r);
+      } else {
+        const newRecord = { ...payload, id: "temp-" + Math.random().toString(36).substring(2, 9) };
+        updatedRecords = [...records, newRecord];
+      }
+      setRecords(updatedRecords);
+      localStorage.setItem(`local_collection_${activeCollectionId}`, JSON.stringify(updatedRecords));
+      localStorage.setItem(pageKey, JSON.stringify(updatedRecords));
+      triggerToast(
+        isEditMode ? "Record Updated (Local)" : "Record Created (Local)",
+        `Saved changes locally (database offline).`,
+        "success"
+      );
+      setShowFormModal(false);
     } finally {
       setSubmitting(false);
     }

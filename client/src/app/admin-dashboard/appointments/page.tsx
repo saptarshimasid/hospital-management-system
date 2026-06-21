@@ -88,15 +88,34 @@ export default function AppointmentsPage() {
       const res = await fetch(`${API_BASE}/api/doctors`);
       if (res.ok) {
         const data = await res.json();
-        setPhysicians(data.map((item: any) => ({
+        const mapped = data.map((item: any) => ({
           name: item.name,
           dept: item.dept,
           status: item.status,
           img: item.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o"
-        })));
+        }));
+        setPhysicians(mapped);
+      } else {
+        throw new Error("Failed to fetch physicians");
       }
     } catch (err) {
-      console.error("Failed to load physicians from Database", err);
+      console.error("Failed to load physicians from Database, using local storage fallback", err);
+      const savedDoctors = localStorage.getItem("local_doctors");
+      if (savedDoctors) {
+        const doctorsData = JSON.parse(savedDoctors);
+        setPhysicians(doctorsData.map((d: any) => ({
+          name: d.name,
+          dept: d.dept,
+          status: d.status,
+          img: d.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o"
+        })));
+      } else {
+        setPhysicians([
+          { name: "Dr. Sarah Jenkins", dept: "Cardiology", status: "available", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o" },
+          { name: "Dr. Robert Chen", dept: "Neurology", status: "busy", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBUR93vsX8-PeJEf1vGo8anymPqpciIEu9_x9IjqrdZVQwRFInWdZrZh6EzF98zhcTAmu_qo75Zgq62h2u1qhebSvRpv8x9AdnDALYA2yPyr7nokvD2GDDZcOQynWOdukWkeiebcJhfXbKTWxTKwBvrfayAZQVJWFzwXqW01XzNzkzLnGnX6VWvfWZzXmROwFxKzACpOmHaTRUfrTcmj9buFrYebCfW0MG8AUWnuLh0dNVA-DRbYj5WYsqfFohmMdu7i7c3SPhaaDI" },
+          { name: "Dr. Emily Taylor", dept: "Pediatrics", status: "available", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB3E3D4czQ2WyFUklLEShTpvakILDd2oKeW2gRacONc5PsddD7Zp-0koHPaE1dcs84hb9548ofn-d11m9p8S7breKKUZQ-Z9aYENF7P8cn8QomCfUEtZRIIHU4mw2Q-AN8jEg6SFyL4Jb1jBTBnJU8rbxe1UOxk1Wna-0E70nPywG7REgfFIjVmMQob1Q5Rxy5LcaaV1qTG6BdyvSijX-5K1EZI0BazLkMiXZ3kGOqDRrAbNRhmY0SOmrTCbWLYXutH0l8G7u5blZc" }
+        ]);
+      }
     }
   }
 
@@ -105,13 +124,52 @@ export default function AppointmentsPage() {
       const res = await fetch(`${API_BASE}/api/appointments`);
       if (res.ok) {
         const data = await res.json();
-        setAppointments(data.map((item: any) => ({
+        const mapped = data.map((item: any) => ({
           ...item,
           id: item._id || item.id
-        })));
+        }));
+        setAppointments(mapped);
+        localStorage.setItem("local_appointments", JSON.stringify(mapped));
+      } else {
+        throw new Error("Failed to fetch appointments");
       }
     } catch (err) {
-      console.error("Failed to load appointments from Database", err);
+      console.error("Failed to load appointments from Database, loading from local storage...", err);
+      const saved = localStorage.getItem("local_appointments");
+      if (saved) {
+        setAppointments(JSON.parse(saved));
+      } else {
+        const defaultAppointments: Appointment[] = [
+          {
+            id: "apt-1",
+            name: "David Miller",
+            doctor: "Dr. Sarah Jenkins",
+            dept: "Cardiology",
+            time: "10:30 AM",
+            date: "2026-06-22",
+            status: "confirmed",
+            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDmVsYcVmImeZHkXR5iUfIXPI5aazV4igMcaxMipsm2kMl5kuVusqoSIq-_yNJFvRtmx8XT825hAdfxKHm-uLdedCQx8UUlPTKptmJMQ2djWKfH3-GAkQcOrF3HxxoeEyJZQGfYd1IbXEdL0CnvJRvSHAnNzMaCI7UtJec2u2omFQCj1GWZZ2pRt9XNSCO4eoCRCrG-bXSl5ofe3yq-gt_OF0pG-A3Xnf-SFBpyhOtZip_ULAYFhioMcc4K9XMrYT3Q59FkV-OTwBw",
+            gender: "Male",
+            age: 42,
+            email: "david.miller@example.com"
+          },
+          {
+            id: "apt-2",
+            name: "Elena Rostova",
+            doctor: "Dr. Robert Chen",
+            dept: "Neurology",
+            time: "02:15 PM",
+            date: "2026-06-22",
+            status: "completed",
+            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBDN3UVTzPzv0Af2e0RzKnIIEO4r9e__EQuYHMnJvh8UWv-6lnXFoZRlJKfi3IvG3LLUscX7j-SPCjcEm0KgmjBmAnhC72OshfvEi8pRB-SQCzdTNWkTSsMT7kZitjLz-d3s3iLxtJfFw-iLSvTcA9S0n-tUmzRtM2g-S0qOEN1qSdigBzn5aT2mtV550DjEN1kz_ZLg95eUGLgGJM4N9nVwt2TYQZfAYgh1xulrJwbYA7exPFK3j0QF1bsBBtzt0yyWHaVnLn9wik",
+            gender: "Female",
+            age: 29,
+            email: "elena.r@example.com"
+          }
+        ];
+        setAppointments(defaultAppointments);
+        localStorage.setItem("local_appointments", JSON.stringify(defaultAppointments));
+      }
     }
   }
 
@@ -180,7 +238,7 @@ export default function AppointmentsPage() {
     ];
     const avatarUrl = avatars[Math.floor(Math.random() * avatars.length)];
 
-    const payload = {
+    const payload: Omit<Appointment, "id"> = {
       name: formPatientName,
       doctor: formDoctor,
       dept: formDept,
@@ -203,20 +261,25 @@ export default function AppointmentsPage() {
       await fetchAppointments();
       triggerToast("Appointment Scheduled", `Successfully booked consultation for ${formPatientName} with ${formDoctor}.`);
     } catch (err) {
-      console.error(err);
-      triggerToast("Booking Error", "Failed to schedule appointment in Database.", "error");
+      console.error("Database save failed, using local storage fallback", err);
+      const localId = "temp-" + Math.random().toString(36).substring(2, 9);
+      const newApt = { ...payload, id: localId };
+      const currentApts = [...appointments, newApt];
+      setAppointments(currentApts);
+      localStorage.setItem("local_appointments", JSON.stringify(currentApts));
+      triggerToast("Appointment Scheduled (Local)", `Successfully booked consultation for ${formPatientName} with ${formDoctor} locally.`);
+    } finally {
+      setShowModal(false);
+
+      // Reset Form
+      setFormPatientName("");
+      setFormDept("Cardiology");
+      setFormDate(new Date().toISOString().split("T")[0]);
+      setFormTime("09:00");
+      setFormGender("Male");
+      setFormAge("");
+      setFormEmail("");
     }
-
-    setShowModal(false);
-
-    // Reset Form
-    setFormPatientName("");
-    setFormDept("Cardiology");
-    setFormDate(new Date().toISOString().split("T")[0]);
-    setFormTime("09:00");
-    setFormGender("Male");
-    setFormAge("");
-    setFormEmail("");
   };
 
   const handleStatusChange = async (id: string, newStatus: "confirmed" | "completed" | "cancelled") => {
@@ -235,7 +298,12 @@ export default function AppointmentsPage() {
       }
     } catch (err) {
       console.error(err);
-      triggerToast("Status Update Error", "Failed to update appointment in Database.", "error");
+      setAppointments(prev => {
+        const updated = prev.map(a => a.id === id ? { ...a, status: newStatus } : a);
+        localStorage.setItem("local_appointments", JSON.stringify(updated));
+        return updated;
+      });
+      triggerToast("Appointment Updated (Local)", `Status changed to ${newStatus} locally.`);
     }
   };
 
@@ -249,7 +317,12 @@ export default function AppointmentsPage() {
       triggerToast("Appointment Cancelled", `Consultation for ${name} was removed from the roster.`, "error");
     } catch (err) {
       console.error(err);
-      triggerToast("Cancel Error", "Failed to delete appointment from Database.", "error");
+      setAppointments(prev => {
+        const updated = prev.filter(a => a.id !== id);
+        localStorage.setItem("local_appointments", JSON.stringify(updated));
+        return updated;
+      });
+      triggerToast("Appointment Cancelled (Local)", `Consultation for ${name} was removed locally.`, "error");
     }
   };
 

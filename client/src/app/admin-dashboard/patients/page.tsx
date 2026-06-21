@@ -131,15 +131,59 @@ export default function PatientsPage() {
       const res = await fetch(`${API_BASE}/api/patients`);
       if (res.ok) {
         const data = await res.json();
-        setPatients(
-          data.map((p: any) => ({
-            ...p,
-            id: p._id || p.id,
-          }))
-        );
+        const mapped = data.map((p: any) => ({
+          ...p,
+          id: p._id || p.id,
+        }));
+        setPatients(mapped);
+        localStorage.setItem("local_patients", JSON.stringify(mapped));
+      } else {
+        throw new Error("Failed to fetch from database");
       }
     } catch (err) {
-      console.error("Failed to fetch patients", err);
+      console.error("Failed to fetch patients, loading from local storage...", err);
+      const saved = localStorage.getItem("local_patients");
+      if (saved) {
+        setPatients(JSON.parse(saved));
+      } else {
+        const defaultPatients = [
+          {
+            id: "pat-1",
+            name: "David Miller",
+            condition: "Acute Bronchitis",
+            admission: "Jan 15, 08:30",
+            status: "Stable",
+            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDmVsYcVmImeZHkXR5iUfIXPI5aazV4igMcaxMipsm2kMl5kuVusqoSIq-_yNJFvRtmx8XT825hAdfxKHm-uLdedCQx8UUlPTKptmJMQ2djWKfH3-GAkQcOrF3HxxoeEyJZQGfYd1IbXEdL0CnvJRvSHAnNzMaCI7UtJec2u2omFQCj1GWZZ2pRt9XNSCO4eoCRCrG-bXSl5ofe3yq-gt_OF0pG-A3Xnf-SFBpyhOtZip_ULAYFhioMcc4K9XMrYT3Q59FkV-OTwBw",
+            gender: "Male",
+            age: 42,
+            email: "david.miller@example.com"
+          },
+          {
+            id: "pat-2",
+            name: "Elena Rostova",
+            condition: "Post-Op Recovery",
+            admission: "Feb 10, 14:15",
+            status: "Treatment",
+            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBDN3UVTzPzv0Af2e0RzKnIIEO4r9e__EQuYHMnJvh8UWv-6lnXFoZRlJKfi3IvG3LLUscX7j-SPCjcEm0KgmjBmAnhC72OshfvEi8pRB-SQCzdTNWkTSsMT7kZitjLz-d3s3iLxtJfFw-iLSvTcA9S0n-tUmzRtM2g-S0qOEN1qSdigBzn5aT2mtV550DjEN1kz_ZLg95eUGLgGJM4N9nVwt2TYQZfAYgh1xulrJwbYA7exPFK3j0QF1bsBBtzt0yyWHaVnLn9wik",
+            gender: "Female",
+            age: 29,
+            email: "elena.r@example.com"
+          },
+          {
+            id: "pat-3",
+            name: "Marcus Vance",
+            condition: "Hypertensive Crisis",
+            admission: "Feb 23, 19:40",
+            status: "Urgent",
+            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuA23_Q91hh10bCN4f7gJMFJprKGgpdptxHMK6c2eIhhcE7Q1TwIjwKEdPjyA9YYKSl032mfuO_o3N6s9MQFH4wr0DGj2Us5Wp0mJFGwNWwhDCBhrD0RbRv1QbKMm8J2aKhnnm1_ZAcm530LQcyGmWwAtM2GziqffApwuWxx8-KpmpGPPZAucb8LNGMiTBmoS0xf4dEgNGrr--uC1FJxMybebjelAz2aB0FssgL75f3n8a9Tl3FPaC4cu6ASoSH5rEHOXQ85i2rHMq8",
+            gender: "Male",
+            age: 61,
+            email: "marcus.vance@example.com"
+          }
+        ];
+        setPatients(defaultPatients);
+        localStorage.setItem("local_patients", JSON.stringify(defaultPatients));
+      }
     } finally {
       setLoading(false);
     }
@@ -182,8 +226,17 @@ export default function PatientsPage() {
       
       triggerToast("Patient Added", `Successfully registered ${formName} to database.`);
       fetchPatients();
+    } catch (err) {
+      console.error("Database save failed, using local storage fallback", err);
+      // Fallback
+      const localId = "temp-" + Math.random().toString(36).substring(2, 9);
+      const newPatient = { ...payload, id: localId };
+      const currentPatients = [...patients, newPatient];
+      setPatients(currentPatients);
+      localStorage.setItem("local_patients", JSON.stringify(currentPatients));
+      triggerToast("Patient Added (Local)", `Successfully added ${formName} locally (database offline).`);
+    } finally {
       setShowAddModal(false);
-      
       // Reset
       setFormName("");
       setFormCondition("");
@@ -192,11 +245,9 @@ export default function PatientsPage() {
       setFormAge("");
       setFormEmail("");
       setFormImg("");
-    } catch (err) {
-      console.error(err);
-      triggerToast("Database Error", "Failed to save new patient record.", "error");
     }
   };
+
 
   // Delete patient record via API
   const handleDeletePatient = async (id: string, name: string) => {
@@ -210,13 +261,21 @@ export default function PatientsPage() {
         fetchPatients();
       } else {
         // Fallback simulation in UI if endpoint is not implemented
-        setPatients(prev => prev.filter(p => p.id !== id));
+        setPatients(prev => {
+          const updated = prev.filter(p => p.id !== id);
+          localStorage.setItem("local_patients", JSON.stringify(updated));
+          return updated;
+        });
         triggerToast("Patient Removed (Local)", `${name} was removed from the session list.`, "error");
       }
     } catch (err) {
       console.error(err);
       // Fallback UI filter
-      setPatients(prev => prev.filter(p => p.id !== id));
+      setPatients(prev => {
+        const updated = prev.filter(p => p.id !== id);
+        localStorage.setItem("local_patients", JSON.stringify(updated));
+        return updated;
+      });
       triggerToast("Patient Removed", `${name} was filtered out from clinical view.`, "error");
     }
   };

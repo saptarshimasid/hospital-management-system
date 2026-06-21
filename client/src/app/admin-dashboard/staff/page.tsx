@@ -136,15 +136,50 @@ export default function StaffPage() {
       const res = await fetch(`${API_BASE}/api/staff`);
       if (res.ok) {
         const data = await res.json();
-        setStaffList(
-          data.map((s: any) => ({
-            ...s,
-            id: s._id || s.id,
-          }))
-        );
+        const mapped = data.map((s: any) => ({
+          ...s,
+          id: s._id || s.id,
+        }));
+        setStaffList(mapped);
+        localStorage.setItem("local_staff", JSON.stringify(mapped));
+      } else {
+        throw new Error("Failed to fetch staff");
       }
     } catch (err) {
-      console.error("Failed to fetch staff", err);
+      console.error("Failed to fetch staff, loading from local storage...", err);
+      const saved = localStorage.getItem("local_staff");
+      if (saved) {
+        setStaffList(JSON.parse(saved));
+      } else {
+        const defaultStaff: Staff[] = [
+          {
+            id: "staff-1",
+            name: "Nurse Kelly Henderson",
+            role: "Nurse",
+            dept: "ER",
+            status: "active",
+            gender: "Female",
+            age: 31,
+            email: "kelly.h@hospital.com",
+            shift: "Day Shift",
+            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB3E3D4czQ2WyFUklLEShTpvakILDd2oKeW2gRacONc5PsddD7Zp-0koHPaE1dcs84hb9548ofn-d11m9p8S7breKKUZQ-Z9aYENF7P8cn8QomCfUEtZRIIHU4mw2Q-AN8jEg6SFyL4Jb1jBTBnJU8rbxe1UOxk1Wna-0E70nPywG7REgfFIjVmMQob1Q5Rxy5LcaaV1qTG6BdyvSijX-5K1EZI0BazLkMiXZ3kGOqDRrAbNRhmY0SOmrTCbWLYXutH0l8G7u5blZc"
+          },
+          {
+            id: "staff-2",
+            name: "Michael Thorne",
+            role: "Radiologist",
+            dept: "Radiology",
+            status: "active",
+            gender: "Male",
+            age: 39,
+            email: "m.thorne@hospital.com",
+            shift: "Night Shift",
+            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCbqlNGf-UBP_bmKLEIHXW5ME0N4fUpm-v4zHLxw-AmDgCJcabHGydiLTCy6hNGWmJdjUG2Td1Pt9q2Aw-lKECxeJVxN_0eZcz_f7hGkM2DAjMRLYSKQzSgUiwCRmZHxfOuYFzGIIoB-OB9nRffi34kZ3fB50Sy-HQhFlaJBt2FVqEC-pPcYRk0twUKXpVD8hd9OLV_k5TDjnwMC_t4Dsq-OQIKd5qGhX16CSZekIV6YjEIkL1vZCC-fh5BFS_EcDuhWnna0oGZHbU"
+          }
+        ];
+        setStaffList(defaultStaff);
+        localStorage.setItem("local_staff", JSON.stringify(defaultStaff));
+      }
     } finally {
       setLoading(false);
     }
@@ -161,11 +196,11 @@ export default function StaffPage() {
     ];
     const imgUrl = avatars[Math.floor(Math.random() * avatars.length)];
 
-    const payload = {
+    const payload: Omit<Staff, "id"> = {
       name: formName,
       role: formRole,
       dept: formDept,
-      status: formStatus,
+      status: formStatus as any,
       gender: formGender,
       age: parseInt(formAge) || 0,
       email: formEmail,
@@ -184,8 +219,16 @@ export default function StaffPage() {
       
       triggerToast("Staff Added", `Successfully registered ${formName} to database.`);
       fetchStaff();
+    } catch (err) {
+      console.error("Database save failed, using local storage fallback", err);
+      const localId = "temp-" + Math.random().toString(36).substring(2, 9);
+      const newStaff = { ...payload, id: localId };
+      const currentStaff = [...staffList, newStaff];
+      setStaffList(currentStaff);
+      localStorage.setItem("local_staff", JSON.stringify(currentStaff));
+      triggerToast("Staff Added (Local)", `Successfully registered ${formName} locally.`);
+    } finally {
       setShowAddModal(false);
-      
       // Reset
       setFormName("");
       setFormRole("Nurse");
@@ -196,9 +239,6 @@ export default function StaffPage() {
       setFormEmail("");
       setFormShift("Day Shift");
       setFormImg("");
-    } catch (err) {
-      console.error(err);
-      triggerToast("Database Error", "Failed to save new staff record.", "error");
     }
   };
 
@@ -211,12 +251,20 @@ export default function StaffPage() {
         triggerToast("Staff Removed", `${name}'s file has been archived.`, "error");
         fetchStaff();
       } else {
-        setStaffList(prev => prev.filter(s => s.id !== id));
+        setStaffList(prev => {
+          const updated = prev.filter(s => s.id !== id);
+          localStorage.setItem("local_staff", JSON.stringify(updated));
+          return updated;
+        });
         triggerToast("Staff Removed (Local)", `${name} was removed from the session list.`, "error");
       }
     } catch (err) {
       console.error(err);
-      setStaffList(prev => prev.filter(s => s.id !== id));
+      setStaffList(prev => {
+        const updated = prev.filter(s => s.id !== id);
+        localStorage.setItem("local_staff", JSON.stringify(updated));
+        return updated;
+      });
       triggerToast("Staff Removed", `${name} was filtered out from clinical view.`, "error");
     }
   };

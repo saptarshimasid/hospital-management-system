@@ -134,15 +134,59 @@ export default function DoctorPage() {
       const res = await fetch(`${API_BASE}/api/doctors`);
       if (res.ok) {
         const data = await res.json();
-        setDoctors(
-          data.map((d: any) => ({
-            ...d,
-            id: d._id || d.id,
-          }))
-        );
+        const mapped = data.map((d: any) => ({
+          ...d,
+          id: d._id || d.id,
+        }));
+        setDoctors(mapped);
+        localStorage.setItem("local_doctors", JSON.stringify(mapped));
+      } else {
+        throw new Error("Failed to fetch doctors");
       }
     } catch (err) {
-      console.error("Failed to fetch doctors", err);
+      console.error("Failed to fetch doctors, loading from local storage...", err);
+      const saved = localStorage.getItem("local_doctors");
+      if (saved) {
+        setDoctors(JSON.parse(saved));
+      } else {
+        const defaultDoctors: Doctor[] = [
+          {
+            id: "doc-1",
+            name: "Dr. Sarah Jenkins",
+            dept: "Cardiology",
+            status: "available",
+            gender: "Female",
+            age: 42,
+            email: "sarah.jenkins@hospital.com",
+            schedule: "08:00 - 16:00",
+            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o"
+          },
+          {
+            id: "doc-2",
+            name: "Dr. Robert Chen",
+            dept: "Neurology",
+            status: "busy",
+            gender: "Male",
+            age: 47,
+            email: "robert.chen@hospital.com",
+            schedule: "09:00 - 17:00",
+            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBUR93vsX8-PeJEf1vGo8anymPqpciIEu9_x9IjqrdZVQwRFInWdZrZh6EzF98zhcTAmu_qo75Zgq62h2u1qhebSvRpv8x9AdnDALYA2yPyr7nokvD2GDDZcOQynWOdukWkeiebcJhfXbKTWxTKwBvrfayAZQVJWFzwXqW01XzNzkzLnGnX6VWvfWZzXmROwFxKzACpOmHaTRUfrTcmj9buFrYebCfW0MG8AUWnuLh0dNVA-DRbYj5WYsqfFohmMdu7i7c3SPhaaDI"
+          },
+          {
+            id: "doc-3",
+            name: "Dr. Emily Taylor",
+            dept: "Pediatrics",
+            status: "available",
+            gender: "Female",
+            age: 36,
+            email: "emily.taylor@hospital.com",
+            schedule: "08:00 - 16:00",
+            img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB3E3D4czQ2WyFUklLEShTpvakILDd2oKeW2gRacONc5PsddD7Zp-0koHPaE1dcs84hb9548ofn-d11m9p8S7breKKUZQ-Z9aYENF7P8cn8QomCfUEtZRIIHU4mw2Q-AN8jEg6SFyL4Jb1jBTBnJU8rbxe1UOxk1Wna-0E70nPywG7REgfFIjVmMQob1Q5Rxy5LcaaV1qTG6BdyvSijX-5K1EZI0BazLkMiXZ3kGOqDRrAbNRhmY0SOmrTCbWLYXutH0l8G7u5blZc"
+          }
+        ];
+        setDoctors(defaultDoctors);
+        localStorage.setItem("local_doctors", JSON.stringify(defaultDoctors));
+      }
     } finally {
       setLoading(false);
     }
@@ -160,10 +204,10 @@ export default function DoctorPage() {
     ];
     const imgUrl = avatars[Math.floor(Math.random() * avatars.length)];
 
-    const payload = {
+    const payload: Omit<Doctor, "id"> = {
       name: formName,
       dept: formDept,
-      status: formStatus,
+      status: formStatus as any,
       gender: formGender,
       age: parseInt(formAge) || 0,
       email: formEmail,
@@ -182,8 +226,16 @@ export default function DoctorPage() {
       
       triggerToast("Doctor Added", `Successfully registered ${formName} to database.`);
       fetchDoctors();
+    } catch (err) {
+      console.error("Database save failed, using local storage fallback", err);
+      const localId = "temp-" + Math.random().toString(36).substring(2, 9);
+      const newDoctor = { ...payload, id: localId };
+      const currentDoctors = [...doctors, newDoctor];
+      setDoctors(currentDoctors);
+      localStorage.setItem("local_doctors", JSON.stringify(currentDoctors));
+      triggerToast("Doctor Added (Local)", `Successfully registered ${formName} locally.`);
+    } finally {
       setShowAddModal(false);
-      
       // Reset
       setFormName("");
       setFormDept("Cardiology");
@@ -193,9 +245,6 @@ export default function DoctorPage() {
       setFormEmail("");
       setFormSchedule("08:00 - 16:00");
       setFormImg("");
-    } catch (err) {
-      console.error(err);
-      triggerToast("Database Error", "Failed to save new doctor record.", "error");
     }
   };
 
@@ -208,12 +257,20 @@ export default function DoctorPage() {
         triggerToast("Doctor Removed", `${name}'s profile has been archived.`, "error");
         fetchDoctors();
       } else {
-        setDoctors(prev => prev.filter(d => d.id !== id));
+        setDoctors(prev => {
+          const updated = prev.filter(d => d.id !== id);
+          localStorage.setItem("local_doctors", JSON.stringify(updated));
+          return updated;
+        });
         triggerToast("Doctor Removed (Local)", `${name} was removed from the session list.`, "error");
       }
     } catch (err) {
       console.error(err);
-      setDoctors(prev => prev.filter(d => d.id !== id));
+      setDoctors(prev => {
+        const updated = prev.filter(d => d.id !== id);
+        localStorage.setItem("local_doctors", JSON.stringify(updated));
+        return updated;
+      });
       triggerToast("Doctor Removed", `${name} was filtered out from clinical view.`, "error");
     }
   };

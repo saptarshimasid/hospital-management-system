@@ -54,6 +54,13 @@ export default function OTPage() {
   const [surgeries, setSurgeries] = useState<SurgeryCase[]>([]);
   const [surgeons, setSurgeons] = useState<Surgeon[]>([]);
 
+  interface Patient {
+    name: string;
+    gender: string;
+    age: number;
+  }
+  const [patients, setPatients] = useState<Patient[]>([]);
+
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { searchQuery, setSearchQuery } = useContext(SearchContext);
   const searchTerm = searchQuery;
@@ -80,18 +87,35 @@ export default function OTPage() {
     setDisplayDate(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     fetchSurgeries();
     fetchSurgeons();
+    fetchPatients();
   }, []);
+
+  async function fetchPatients() {
+    try {
+      const res = await fetch(`${API_BASE}/api/patients`);
+      if (res.ok) {
+        const data = await res.json();
+        setPatients(data);
+      }
+    } catch (err) {
+      console.error("Failed to load patients from Database", err);
+    }
+  }
 
   async function fetchSurgeons() {
     try {
       const res = await fetch(`${API_BASE}/api/doctors`);
       if (res.ok) {
         const data = await res.json();
-        setSurgeons(data.map((item: any) => ({
+        const surgeonList = data.map((item: any) => ({
           name: item.name,
           status: item.status === "busy" ? "in-ot" : item.status === "consulting" ? "consultation" : item.status,
           img: item.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o"
-        })));
+        }));
+        setSurgeons(surgeonList);
+        if (surgeonList.length > 0 && !formSurgeon) {
+          setFormSurgeon(surgeonList[0].name);
+        }
       }
     } catch (err) {
       console.error("Failed to load surgeons from Database", err);
@@ -112,6 +136,7 @@ export default function OTPage() {
       console.error("Failed to load surgeries from Database", err);
     }
   }
+
 
   // Animate stats cards on mount
   useEffect(() => {
@@ -566,14 +591,27 @@ export default function OTPage() {
         <form onSubmit={handleBookingSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Patient Name</label>
-            <input
-              type="text"
+            <select
               required
               value={formPatientName}
-              onChange={(e) => setFormPatientName(e.target.value)}
-              className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff]"
-              placeholder="e.g. John Doe"
-            />
+              onChange={(e) => {
+                const selectedName = e.target.value;
+                setFormPatientName(selectedName);
+                const selectedPatient = patients.find(p => p.name === selectedName);
+                if (selectedPatient) {
+                  setFormGender(selectedPatient.gender || "Male");
+                  setFormAge(selectedPatient.age ? String(selectedPatient.age) : "");
+                }
+              }}
+              className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
+            >
+              <option value="" disabled>Select Admitted Patient</option>
+              {patients.map((p, idx) => (
+                <option key={idx} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

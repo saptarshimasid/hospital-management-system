@@ -44,6 +44,13 @@ export default function BedAvailabilityPage() {
   const [beds, setBeds] = useState<BedInfo[]>([]);
   const [visibleCount, setVisibleCount] = useState<number>(30);
 
+  interface Patient {
+    name: string;
+    gender: string;
+    age: number;
+  }
+  const [patients, setPatients] = useState<Patient[]>([]);
+
   const [wardFilter, setWardFilter] = useState<string>("all");
   const { searchQuery, setSearchQuery } = useContext(SearchContext);
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -64,7 +71,20 @@ export default function BedAvailabilityPage() {
   useEffect(() => {
     setDisplayDate(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     fetchBeds();
+    fetchPatients();
   }, []);
+
+  async function fetchPatients() {
+    try {
+      const res = await fetch(`${API_BASE}/api/patients`);
+      if (res.ok) {
+        const data = await res.json();
+        setPatients(data);
+      }
+    } catch (err) {
+      console.error("Failed to load patients from Database", err);
+    }
+  }
 
   useEffect(() => {
     setVisibleCount(30);
@@ -543,14 +563,27 @@ export default function BedAvailabilityPage() {
           </div>
           <div className="space-y-1">
             <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Patient Name</label>
-            <input
-              type="text"
+            <select
               required
               value={formPatientName}
-              onChange={(e) => setFormPatientName(e.target.value)}
-              className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff]"
-              placeholder="e.g. Arthur Morgan"
-            />
+              onChange={(e) => {
+                const selectedName = e.target.value;
+                setFormPatientName(selectedName);
+                const selectedPatient = patients.find(p => p.name === selectedName);
+                if (selectedPatient) {
+                  setFormGender(selectedPatient.gender || "Male");
+                  setFormAge(selectedPatient.age ? String(selectedPatient.age) : "");
+                }
+              }}
+              className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
+            >
+              <option value="" disabled>Select Admitted Patient</option>
+              {patients.map((p, idx) => (
+                <option key={idx} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

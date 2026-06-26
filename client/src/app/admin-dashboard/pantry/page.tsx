@@ -44,8 +44,23 @@ interface ToastMessage {
   type: "success" | "error";
 }
 
+interface Patient {
+  name: string;
+  gender: string;
+  age: number;
+}
+
+interface BedType {
+  id: string;
+  ward: string;
+  status: string;
+  patient: string | null;
+}
+
 export default function PantryPage() {
   const [orders, setOrders] = useState<PantryOrder[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [beds, setBeds] = useState<BedType[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Search and Filters
@@ -80,11 +95,37 @@ export default function PantryPage() {
   const addDialogRef = useRef<HTMLDialogElement>(null);
   const detailDialogRef = useRef<HTMLDialogElement>(null);
 
+  async function fetchPatients() {
+    try {
+      const res = await fetch(`${API_BASE}/api/patients`);
+      if (res.ok) {
+        const data = await res.json();
+        setPatients(data);
+      }
+    } catch (err) {
+      console.error("Failed to load patients from Database", err);
+    }
+  }
+
+  async function fetchBeds() {
+    try {
+      const res = await fetch(`${API_BASE}/api/beds`);
+      if (res.ok) {
+        const data = await res.json();
+        setBeds(data);
+      }
+    } catch (err) {
+      console.error("Failed to load beds", err);
+    }
+  }
+
   // Fetch Orders on Mount
   useEffect(() => {
     setDisplayDate(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     fetchOrders();
     fetchInventory();
+    fetchPatients();
+    fetchBeds();
   }, []);
 
   useEffect(() => {
@@ -246,7 +287,7 @@ export default function PantryPage() {
 
       if (!res.ok) throw new Error("Failed to add pantry order");
       
-      triggerToast("Order Created", `Successfully logged pantry request for Room ${formRoom}.`);
+      triggerToast("Order Created", `Successfully logged pantry request for Bed ${formRoom}.`);
       fetchOrders();
       fetchInventory();
       setShowAddModal(false);
@@ -287,7 +328,7 @@ export default function PantryPage() {
         method: "DELETE"
       });
       if (res.ok) {
-        triggerToast("Order Archived", `Pantry log for Room ${room} has been archived.`, "error");
+        triggerToast("Order Archived", `Pantry log for Bed ${room} has been archived.`, "error");
         fetchOrders();
       }
     } catch (err) {
@@ -409,7 +450,7 @@ export default function PantryPage() {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4 opacity-60" />
               <input
                 type="text"
-                placeholder="Search by patient, room, or meal..."
+                placeholder="Search by patient, bed, or meal..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2.5 pl-11 pr-4 text-xs focus:ring-1 focus:ring-primary/50 text-on-surface placeholder-on-surface-variant/40 focus:outline-none"
@@ -441,7 +482,7 @@ export default function PantryPage() {
               <thead>
                 <tr className="text-on-surface-variant/80 border-b border-white/5 font-medium uppercase tracking-wider text-[9px]">
                   <th className="pb-3.5">Patient Name</th>
-                  <th className="pb-3.5">Room</th>
+                  <th className="pb-3.5">Bed Number</th>
                   <th className="pb-3.5">Requested Item</th>
                   <th className="pb-3.5">Qty</th>
                   <th className="pb-3.5">Target Time</th>
@@ -635,27 +676,44 @@ export default function PantryPage() {
         <form onSubmit={handleAddSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Patient Name</label>
-            <input
-              type="text"
+            <select
               required
               value={formPatientName}
-              onChange={(e) => setFormPatientName(e.target.value)}
-              className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff]"
-              placeholder="e.g. Arthur Morgan"
-            />
+              onChange={(e) => {
+                const pName = e.target.value;
+                setFormPatientName(pName);
+                const assignedBed = beds.find((b) => b.patient === pName);
+                if (assignedBed) {
+                  setFormRoom(assignedBed.id);
+                } else {
+                  setFormRoom("");
+                }
+              }}
+              className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
+            >
+              <option value="" disabled>Select Patient...</option>
+              {patients.map((p, i) => (
+                <option key={i} value={p.name}>{p.name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Room Number</label>
-              <input
-                type="text"
+              <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Bed Number</label>
+              <select
                 required
                 value={formRoom}
                 onChange={(e) => setFormRoom(e.target.value)}
-                className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff]"
-                placeholder="e.g. ICU-01"
-              />
+                className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
+              >
+                <option value="" disabled>Select Bed...</option>
+                {beds.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.id} ({b.ward}){b.patient ? ` - ${b.patient}` : ""}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1">
               <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Quantity</label>
@@ -763,7 +821,7 @@ export default function PantryPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-primary">Dietary Service Slip</h3>
-                  <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">Room {selectedOrder.room} • {selectedOrder.patientName}</p>
+                  <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">Bed {selectedOrder.room} • {selectedOrder.patientName}</p>
                 </div>
               </div>
               <button
@@ -781,7 +839,7 @@ export default function PantryPage() {
                   <p className="font-semibold mt-0.5 text-on-surface">{selectedOrder.patientName}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">Room Number</p>
+                  <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">Bed Number</p>
                   <p className="font-semibold mt-0.5 text-on-surface">{selectedOrder.room}</p>
                 </div>
               </div>

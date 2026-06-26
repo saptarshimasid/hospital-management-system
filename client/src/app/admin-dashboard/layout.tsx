@@ -222,8 +222,8 @@ export default function DashboardLayout({
         <div className="min-h-screen bg-[#0b1326] flex text-[#dae2fd]">
         
         {/* Sidebar Navigation */}
-        <aside className={`w-72 fixed left-0 top-0 h-screen bg-[#0b1326]/95 border-r border-white/10 shadow-2xl flex flex-col py-6 z-40 select-none transition-transform duration-300 md:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        <aside className={`w-72 fixed left-0 top-0 h-screen bg-[#0b1326]/95 border-r border-white/10 shadow-2xl flex flex-col py-6 z-40 select-none transition-transform duration-300 ${
+          sidebarOpen ? "translate-x-0" : "max-md:-translate-x-full"
         }`}>
           <div className="px-6 mb-10 flex justify-between items-center">
             <div>

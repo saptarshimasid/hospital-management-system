@@ -16,7 +16,7 @@ import {
   PantryOrder,
   Diagnosis,
   DashboardPage,
-  pool,
+  supabase,
   mapRow
 } from '@/utils/db';
 
@@ -90,24 +90,21 @@ async function getEmbedding(text: string): Promise<number[]> {
   return data.embedding?.values || [];
 }
 
-// --- VEctor DB Context Retrieval ---
+// --- Vector DB Context Retrieval ---
 async function getRelevantContext(query: string): Promise<string> {
   try {
     const vector = await getEmbedding(query);
     const vectorStr = `[${vector.join(',')}]`;
-    
-    // Execute cosine similarity query using pgvector
-    const res = await pool.query(
-      `SELECT prompt, response, category, 1 - (embedding <=> $1::vector) AS similarity 
-       FROM chat_vectors 
-       WHERE embedding IS NOT NULL AND (embedding <=> $1::vector) < 0.35 
-       ORDER BY embedding <=> $1::vector 
-       LIMIT 1`,
-      [vectorStr]
-    );
 
-    if (res.rowCount && res.rowCount > 0) {
-      const row = res.rows[0];
+    // Execute cosine similarity query using Supabase RPC (pgvector)
+    const { data, error } = await supabase.rpc('match_chat_vectors', {
+      query_embedding: vectorStr,
+      match_threshold: 0.35,
+      match_count: 1
+    });
+
+    if (!error && data && data.length > 0) {
+      const row = data[0];
       return `\n=== RELEVANT HISTORICAL AI CONTEXT ===\nPrevious Query (Similarity: ${parseFloat(row.similarity).toFixed(2)}):\nUser: ${row.prompt}\nAI: ${row.response}\n=======================================\n`;
     }
   } catch (err: any) {
@@ -315,8 +312,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
     }
 
     if (path === 'pantry/inventory') {
-      const list = await pool.query('SELECT * FROM pantry_inventory ORDER BY name ASC');
-      return NextResponse.json(list.rows.map(row => mapRow(row, 'pantry_inventory')));
+      const { data, error } = await supabase.from('pantry_inventory').select('*').order('name', { ascending: true });
+      if (error) throw new Error(error.message);
+      return NextResponse.json((data || []).map((row: any) => mapRow(row, 'pantry_inventory')));
     }
 
     if (path === 'diagnoses') {
@@ -325,8 +323,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
     }
 
     if (path === 'pages') {
-      const list = await pool.query('SELECT * FROM dashboard_pages ORDER BY order_index ASC');
-      return NextResponse.json(list.rows.map(row => mapRow(row, 'dashboard_pages')));
+      const { data, error } = await supabase.from('dashboard_pages').select('*').order('order_index', { ascending: true });
+      if (error) throw new Error(error.message);
+      return NextResponse.json((data || []).map((row: any) => mapRow(row, 'dashboard_pages')));
     }
 
     return NextResponse.json({ error: 'Not Found' }, { status: 404 });
@@ -436,21 +435,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
       // Decrement stock of the item in pantry_inventory
       const item = body.item;
       const quantity = body.quantity || 1;
-      await pool.query(
-        'UPDATE pantry_inventory SET stock = GREATEST(0, stock - $1), updated_at = CURRENT_TIMESTAMP WHERE name = $2',
-        [quantity, item]
-      );
+      // Fetch current stock then update
+      const { data: invRow } = await supabase.from('pantry_inventory').select('stock').eq('name', item).maybeSingle();
+      if (invRow) {
+        const newStock = Math.max(0, (invRow.stock || 0) - quantity);
+        await supabase.from('pantry_inventory').update({ stock: newStock }).eq('name', item);
+      }
 
       return NextResponse.json(po, { status: 201 });
     }
 
     if (path === 'pantry/inventory') {
       const { name, stock, unit } = body;
-      const newItem = await pool.query(
-        'INSERT INTO pantry_inventory (name, stock, unit) VALUES ($1, $2, $3) RETURNING *',
-        [name, stock, unit]
-      );
-      return NextResponse.json(mapRow(newItem.rows[0], 'pantry_inventory'), { status: 201 });
+      const { data: newItem, error } = await supabase
+        .from('pantry_inventory')
+        .insert({ name, stock, unit })
+        .select()
+        .single();
+      if (error) throw new Error(error.message);
+      return NextResponse.json(mapRow(newItem, 'pantry_inventory'), { status: 201 });
     }
 
     if (path === 'diagnoses') {
@@ -481,15 +484,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
 
     if (path === 'pages') {
       const { name, href, icon, subtitle, status, order_index } = body;
-      const newPage = await pool.query(
-        'INSERT INTO dashboard_pages (name, href, icon, subtitle, status, order_index) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-        [name, href, icon, subtitle, status, order_index || 0]
-      );
-      return NextResponse.json(mapRow(newPage.rows[0], 'dashboard_pages'), { status: 201 });
+      const { data: newPage, error } = await supabase
+        .from('dashboard_pages')
+        .insert({ name, href, icon, subtitle, status, order_index: order_index || 0 })
+        .select()
+        .single();
+      if (error) throw new Error(error.message);
+      return NextResponse.json(mapRow(newPage, 'dashboard_pages'), { status: 201 });
     }
 
     if (path === 'notifications/read-all') {
-      await pool.query('UPDATE notifications SET read = TRUE');
+      await supabase.from('notifications').update({ read: true }).neq('id', '00000000-0000-0000-0000-000000000000');
       return NextResponse.json({ success: true });
     }
 
@@ -624,11 +629,12 @@ ${rawResponse}`;
         try {
           const vector = await getEmbedding(prompt);
           const vectorStr = `[${vector.join(',')}]`;
-          await pool.query(
-            `INSERT INTO chat_vectors (prompt, response, category, embedding) 
-             VALUES ($1, $2, $3, $4::vector)`,
-            [prompt, formattedResponse, category, vectorStr]
-          );
+          await supabase.rpc('insert_chat_vector', {
+            p_prompt: prompt,
+            p_response: formattedResponse,
+            p_category: category,
+            p_embedding: vectorStr
+          });
         } catch (e: any) {
           console.error('[VectorDB] Save error:', e.message);
         }
@@ -721,28 +727,32 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ rout
     if (path.startsWith('pantry/inventory/')) {
       const inventoryId = route[2];
       const { stock, name, unit } = body;
-      const updatedItem = await pool.query(
-        'UPDATE pantry_inventory SET stock = $1, name = $2, unit = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4 RETURNING *',
-        [stock, name, unit, inventoryId]
-      );
-      if (updatedItem.rowCount === 0) {
+      const { data: updatedItem, error } = await supabase
+        .from('pantry_inventory')
+        .update({ stock, name, unit })
+        .eq('id', inventoryId)
+        .select()
+        .single();
+      if (error || !updatedItem) {
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
-      return NextResponse.json(mapRow(updatedItem.rows[0], 'pantry_inventory'));
+      return NextResponse.json(mapRow(updatedItem, 'pantry_inventory'));
     }
 
     // PUT /api/pages/:id
     if (path.startsWith('pages/')) {
       const pageId = route[1];
       const { name, href, icon, subtitle, status, order_index } = body;
-      const updatedPage = await pool.query(
-        'UPDATE dashboard_pages SET name = $1, href = $2, icon = $3, subtitle = $4, status = $5, order_index = $6, updated_at = CURRENT_TIMESTAMP WHERE id = $7 RETURNING *',
-        [name, href, icon, subtitle, status, order_index || 0, pageId]
-      );
-      if (updatedPage.rowCount === 0) {
+      const { data: updatedPage, error } = await supabase
+        .from('dashboard_pages')
+        .update({ name, href, icon, subtitle, status, order_index: order_index || 0 })
+        .eq('id', pageId)
+        .select()
+        .single();
+      if (error || !updatedPage) {
         return NextResponse.json({ error: 'Page not found' }, { status: 404 });
       }
-      return NextResponse.json(mapRow(updatedPage.rows[0], 'dashboard_pages'));
+      return NextResponse.json(mapRow(updatedPage, 'dashboard_pages'));
     }
 
     // PUT /api/medications/:id/dispense
@@ -768,7 +778,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ rout
 
     // PUT /api/notifications/read-all
     if (path === 'notifications/read-all') {
-      await pool.query('UPDATE notifications SET read = TRUE');
+      await supabase.from('notifications').update({ read: true }).neq('id', '00000000-0000-0000-0000-000000000000');
       return NextResponse.json({ success: true });
     }
 
@@ -856,7 +866,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
 
   try {
     if (path === 'notifications/clear-all' || path === 'notifications') {
-      await pool.query('DELETE FROM notifications');
+      await supabase.from('notifications').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       return NextResponse.json({ success: true });
     }
 
@@ -904,20 +914,20 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
 
     if (path.startsWith('pantry/inventory/') && route.length === 3) {
       const id = route[2];
-      const res = await pool.query('DELETE FROM pantry_inventory WHERE id = $1 RETURNING *', [id]);
-      if (res.rowCount === 0) {
+      const { data, error } = await supabase.from('pantry_inventory').delete().eq('id', id).select().single();
+      if (error || !data) {
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
-      return NextResponse.json(mapRow(res.rows[0], 'pantry_inventory'));
+      return NextResponse.json(mapRow(data, 'pantry_inventory'));
     }
 
     if (path.startsWith('pages/') && route.length === 2) {
       const id = route[1];
-      const res = await pool.query('DELETE FROM dashboard_pages WHERE id = $1 RETURNING *', [id]);
-      if (res.rowCount === 0) {
+      const { data, error } = await supabase.from('dashboard_pages').delete().eq('id', id).select().single();
+      if (error || !data) {
         return NextResponse.json({ error: 'Page not found' }, { status: 404 });
       }
-      return NextResponse.json(mapRow(res.rows[0], 'dashboard_pages'));
+      return NextResponse.json(mapRow(data, 'dashboard_pages'));
     }
 
     if (path.startsWith('diagnoses/') && route.length === 2) {

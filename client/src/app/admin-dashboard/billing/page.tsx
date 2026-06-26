@@ -49,6 +49,23 @@ interface ToastMessage {
   type: "success" | "error";
 }
 
+interface Patient {
+  name: string;
+  gender?: string;
+  age?: number;
+}
+
+interface Bed {
+  id: string;
+  ward: string;
+  patient: string | null;
+}
+
+interface Appointment {
+  name: string;
+  dept: string;
+}
+
 export default function BillingPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [claims, setClaims] = useState<Claim[]>([]);
@@ -70,16 +87,58 @@ export default function BillingPage() {
   const [formGender, setFormGender] = useState("Male");
   const [formAge, setFormAge] = useState("");
   const [displayDate, setDisplayDate] = useState("");
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [beds, setBeds] = useState<Bed[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
 
   const statsContainerRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  // Set local machine date on mount and load invoices
+  async function fetchPatients() {
+    try {
+      const res = await fetch(`${API_BASE}/api/patients`);
+      if (res.ok) {
+        const data = await res.json();
+        setPatients(data);
+      }
+    } catch (err) {
+      console.error("Failed to load patients", err);
+    }
+  }
+
+  async function fetchBeds() {
+    try {
+      const res = await fetch(`${API_BASE}/api/beds`);
+      if (res.ok) {
+        const data = await res.json();
+        setBeds(data);
+      }
+    } catch (err) {
+      console.error("Failed to load beds", err);
+    }
+  }
+
+  async function fetchAppointments() {
+    try {
+      const res = await fetch(`${API_BASE}/api/appointments`);
+      if (res.ok) {
+        const data = await res.json();
+        setAppointments(data);
+      }
+    } catch (err) {
+      console.error("Failed to load appointments", err);
+    }
+  }
+
+  // Set local machine date on mount and load data
   useEffect(() => {
     const today = new Date();
     setDisplayDate(today.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     setFormDate(today.toISOString().split("T")[0]);
     fetchInvoices();
+    fetchPatients();
+    fetchBeds();
+    fetchAppointments();
   }, []);
 
   async function fetchInvoices() {
@@ -96,6 +155,51 @@ export default function BillingPage() {
       console.error("Failed to load invoices from Database", err);
     }
   }
+
+  const getPatientDept = (patientName: string) => {
+    // 1. Try to find in beds
+    const bed = beds.find(b => b.patient === patientName);
+    if (bed) {
+      const wardUpper = bed.ward.toUpperCase();
+      if (wardUpper === 'ER') return 'Emergency';
+      if (wardUpper === 'CARDIOLOGY') return 'Cardiology';
+      if (wardUpper === 'NEUROLOGY') return 'Neurology';
+      return 'Gen Medicine';
+    }
+    // 2. Try to find in appointments
+    const appt = appointments.find(a => a.name === patientName);
+    if (appt) {
+      const deptUpper = appt.dept.toUpperCase();
+      if (deptUpper === 'CARDIOLOGY') return 'Cardiology';
+      if (deptUpper === 'NEUROLOGY') return 'Neurology';
+      if (deptUpper === 'ER' || deptUpper === 'EMERGENCY') return 'Emergency';
+      return 'Gen Medicine';
+    }
+    return 'Gen Medicine';
+  };
+
+  const handlePatientSelectChange = (pName: string) => {
+    setFormPatientName(pName);
+    const p = patients.find(patient => patient.name === pName);
+    if (p) {
+      if (p.gender) {
+        const formattedGender = p.gender.charAt(0).toUpperCase() + p.gender.slice(1).toLowerCase();
+        if (["Male", "Female", "Other"].includes(formattedGender)) {
+          setFormGender(formattedGender);
+        } else {
+          setFormGender("Male");
+        }
+      }
+      if (p.age !== undefined && p.age !== null) {
+        setFormAge(p.age.toString());
+      } else {
+        setFormAge("");
+      }
+      
+      const dept = getPatientDept(pName);
+      setFormDept(dept);
+    }
+  };
 
   // Stats calculation
   const totalBilledToday = invoices.reduce((acc, curr) => acc + curr.amount, 0);
@@ -479,14 +583,17 @@ export default function BillingPage() {
         <form onSubmit={handleInvoiceSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Patient Name</label>
-            <input
-              type="text"
+            <select
               required
               value={formPatientName}
-              onChange={(e) => setFormPatientName(e.target.value)}
-              className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]"
-              placeholder="e.g. John Doe"
-            />
+              onChange={(e) => handlePatientSelectChange(e.target.value)}
+              className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
+            >
+              <option value="" disabled>Select Patient...</option>
+              {patients.map((p, i) => (
+                <option key={i} value={p.name}>{p.name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

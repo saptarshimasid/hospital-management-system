@@ -27,7 +27,7 @@ function mapKeyToCol(key: string): string {
   return key;
 }
 
-export function mapRow(row: any, tableName: string): any {
+export function mapRow(row: any, _tableName?: string): any {
   if (!row) return null;
   const doc: any = {};
   for (const [col, val] of Object.entries(row)) {
@@ -280,7 +280,7 @@ function makeModelInterface(tableName: string) {
     return mapRow(data, tableName);
   };
 
-  modelInterface.findByIdAndUpdate = async function(id: string, update: Record<string, any>, _options = {}) {
+  modelInterface.findByIdAndUpdate = async function(id: string, update: Record<string, any>) {
     const cols: Record<string, any> = {};
     for (const [key, val] of Object.entries(update)) {
       cols[mapKeyToCol(key)] = val;
@@ -295,7 +295,7 @@ function makeModelInterface(tableName: string) {
     return new Model(tableName, mapRow(data, tableName));
   };
 
-  modelInterface.findOneAndUpdate = async function(query: Record<string, any>, update: Record<string, any>, _options = {}) {
+  modelInterface.findOneAndUpdate = async function(query: Record<string, any>, update: Record<string, any>) {
     // Find matching record ID first
     let selectQuery = supabase.from(tableName).select('id').limit(1);
     for (const [key, val] of Object.entries(query)) {

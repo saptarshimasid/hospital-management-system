@@ -15,7 +15,6 @@ import {
   NotificationModel,
   PantryOrder,
   Diagnosis,
-  DashboardPage,
   supabase,
   mapRow
 } from '@/utils/db';
@@ -33,7 +32,7 @@ async function ensureDb() {
 async function getJson(req: NextRequest) {
   try {
     return await req.json();
-  } catch (e) {
+  } catch {
     return {};
   }
 }

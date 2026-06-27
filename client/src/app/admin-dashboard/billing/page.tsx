@@ -85,11 +85,13 @@ export default function BillingPage() {
   const [formDept, setFormDept] = useState("Cardiology");
   const [formAmount, setFormAmount] = useState("");
   const [formServices, setFormServices] = useState("");
-  const [formDate, setFormDate] = useState("");
+  const [formDate, setFormDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [formStatus, setFormStatus] = useState<"Paid" | "Pending" | "Overdue" | "Partial Paid">("Pending");
   const [formGender, setFormGender] = useState("Male");
   const [formAge, setFormAge] = useState("");
-  const [displayDate, setDisplayDate] = useState("");
+  const displayDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const [policyPatientName, setPolicyPatientName] = useState("");
+  const [policyPlan, setPolicyPlan] = useState<"Standard" | "Premium" | "Comprehensive">("Standard");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [beds, setBeds] = useState<Bed[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -138,13 +140,12 @@ export default function BillingPage() {
 
   // Set local machine date on mount and load data
   useEffect(() => {
-    const today = new Date();
-    setDisplayDate(today.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
-    setFormDate(today.toISOString().split("T")[0]);
+    /* eslint-disable react-hooks/set-state-in-effect */
     fetchInvoices();
     fetchPatients();
     fetchBeds();
     fetchAppointments();
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   async function fetchInvoices() {
@@ -152,6 +153,7 @@ export default function BillingPage() {
       const res = await fetch(`${API_BASE}/api/invoices`);
       if (res.ok) {
         const data = await res.json();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setInvoices(data.map((item: any) => ({
           ...item,
           id: item._id || item.id
@@ -329,6 +331,52 @@ export default function BillingPage() {
     setFormApprovedAmount("");
   };
 
+  const handleBuyPolicy = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!policyPatientName) return;
+
+    let amount = 1000;
+    if (policyPlan === "Premium") amount = 2000;
+    if (policyPlan === "Comprehensive") amount = 3000;
+
+    const p = patients.find(patient => patient.name === policyPatientName);
+    const gender = p?.gender || "Male";
+    const age = p?.age || 30;
+
+    const payload = {
+      patientName: policyPatientName,
+      dept: "Gen Medicine",
+      services: `Health Copilot Insurance - ${policyPlan} Plan`,
+      amount,
+      date: new Date().toISOString().split("T")[0],
+      status: "Paid",
+      gender,
+      age,
+      insuranceClaimed: false,
+      claimedAmount: 0,
+      approvedAmount: 0
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/api/invoices`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        triggerToast("Policy Purchased", `Successfully issued ${policyPlan} plan for ${policyPatientName}.`);
+        fetchInvoices();
+        setPolicyPatientName("");
+        setPolicyPlan("Standard");
+      } else {
+        throw new Error("Failed to purchase policy");
+      }
+    } catch (err) {
+      console.error(err);
+      triggerToast("Purchase Error", "Failed to purchase insurance policy.", "error");
+    }
+  };
+
   const submitClaim = (claimId: string, invoiceId: string, amount: number) => {
     setClaims((prevClaims) => prevClaims.filter((c) => c.id !== claimId));
     triggerToast("Claim Submitted", `Insurance claim for invoice ${invoiceId} totaling $${amount.toLocaleString()} dispatched.`);
@@ -337,10 +385,10 @@ export default function BillingPage() {
   const filteredInvoices = invoices.filter((i) => {
     const matchesStatus = statusFilter === "all" || i.status.toLowerCase() === statusFilter.toLowerCase();
     const matchesSearch =
-      i.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      i.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      i.dept.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      i.services.toLowerCase().includes(searchTerm.toLowerCase());
+      (i.patientName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (i.id?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (i.dept?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (i.services?.toLowerCase() || "").includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -596,6 +644,53 @@ export default function BillingPage() {
               <p className="text-xs text-on-surface-variant italic text-center py-6">All claims dispatched.</p>
             )}
           </div>
+
+          {/* Health Copilot Insurance Policy Purchase */}
+          <div className="border-t border-white/5 pt-6 mt-6 space-y-4">
+            <div>
+              <h5 className="text-xs font-bold text-primary flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#00f0ff]" /> Health Copilot Insurance
+              </h5>
+              <p className="text-[10px] text-on-surface-variant">Hospital&apos;s native coverage plans</p>
+            </div>
+
+            <form onSubmit={handleBuyPolicy} className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-[8px] text-on-surface-variant uppercase tracking-wider font-semibold">Select Patient</label>
+                <select
+                  required
+                  value={policyPatientName}
+                  onChange={(e) => setPolicyPatientName(e.target.value)}
+                  className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
+                >
+                  <option value="" disabled>Select Patient...</option>
+                  {patients.map((p, i) => (
+                    <option key={i} value={p.name}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[8px] text-on-surface-variant uppercase tracking-wider font-semibold">Select Plan</label>
+                <select
+                  value={policyPlan}
+                  onChange={(e) => setPolicyPlan(e.target.value as "Standard" | "Premium" | "Comprehensive")}
+                  className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
+                >
+                  <option value="Standard">Standard ($1,000)</option>
+                  <option value="Premium">Premium ($2,000)</option>
+                  <option value="Comprehensive">Comprehensive ($3,000)</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-primary-container to-secondary-container text-on-primary font-bold py-2 rounded-xl text-xs hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1 cursor-pointer mt-2"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" /> Buy Policy
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -729,7 +824,7 @@ export default function BillingPage() {
               <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Billing Status</label>
               <select
                 value={formStatus}
-                onChange={(e) => setFormStatus(e.target.value as any)}
+                onChange={(e) => setFormStatus(e.target.value as "Paid" | "Pending" | "Overdue" | "Partial Paid")}
                 className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] cursor-pointer"
               >
                 <option value="Paid">Paid</option>

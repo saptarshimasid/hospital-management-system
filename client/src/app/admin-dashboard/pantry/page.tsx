@@ -83,7 +83,7 @@ export default function PantryPage() {
   const [formQuantity, setFormQuantity] = useState("1");
   const [formDeliveryTime, setFormDeliveryTime] = useState("ASAP");
   const [formStatus, setFormStatus] = useState<"Pending" | "Preparing" | "Delivered">("Pending");
-  const [displayDate, setDisplayDate] = useState("");
+  const displayDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   // Inventory Stock State
   const [inventory, setInventory] = useState<{ id: string; name: string; stock: number; unit: string }[]>([]);
@@ -121,17 +121,20 @@ export default function PantryPage() {
 
   // Fetch Orders on Mount
   useEffect(() => {
-    setDisplayDate(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
+    /* eslint-disable react-hooks/set-state-in-effect */
     fetchOrders();
     fetchInventory();
     fetchPatients();
     fetchBeds();
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (inventory.length > 0 && !formItem) {
       setFormItem(inventory[0].name);
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [inventory, formItem]);
 
   // GSAP animation
@@ -177,13 +180,14 @@ export default function PantryPage() {
     }, 4000);
   };
 
-  const fetchOrders = async () => {
+  async function fetchOrders() {
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE}/api/pantry`);
       if (res.ok) {
         const data = await res.json();
         setOrders(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           data.map((o: any) => ({
             ...o,
             id: o._id || o.id,
@@ -195,19 +199,23 @@ export default function PantryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const fetchInventory = async () => {
+  async function fetchInventory() {
     try {
       const res = await fetch(`${API_BASE}/api/pantry/inventory`);
       if (res.ok) {
         const data = await res.json();
-        setInventory(data);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setInventory(data.map((item: any) => ({
+          ...item,
+          id: item._id || item.id
+        })));
       }
     } catch (err) {
       console.error("Failed to fetch pantry inventory", err);
     }
-  };
+  }
 
   const handleUpdateStock = async (id: string, newStock: number) => {
     try {
@@ -765,7 +773,7 @@ export default function PantryPage() {
               <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Order Status</label>
               <select
                 value={formStatus}
-                onChange={(e) => setFormStatus(e.target.value as any)}
+                onChange={(e) => setFormStatus(e.target.value as "Pending" | "Preparing" | "Delivered")}
                 className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
               >
                 <option value="Pending">Pending</option>

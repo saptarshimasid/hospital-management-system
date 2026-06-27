@@ -57,11 +57,10 @@ export default function PharmacyPage() {
   const setSearchTerm = setSearchQuery;
   const [showModal, setShowModal] = useState<boolean>(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [displayDate, setDisplayDate] = useState("");
+  const displayDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   // Set local machine date on mount and load pharmacy data
   useEffect(() => {
-    setDisplayDate(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     fetchPharmacyData();
   }, []);
 
@@ -316,7 +315,7 @@ export default function PharmacyPage() {
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Cold Vault Temp</p>
-            <h3 className="text-xl font-bold mt-1">-- °C</h3>
+            <h3 className="text-xl font-bold mt-1">-20 °C</h3>
           </div>
         </div>
       </div>

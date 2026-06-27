@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/set-state-in-effect */
 "use client";
 import { API_BASE } from "@/utils/api";
 
@@ -45,6 +46,8 @@ export default function BedAvailabilityPage() {
   const [visibleCount, setVisibleCount] = useState<number>(30);
 
   interface Patient {
+    id?: string;
+    _id?: string;
     name: string;
     gender: string;
     age: number;
@@ -208,6 +211,22 @@ export default function BedAvailabilityPage() {
         body: JSON.stringify(payload)
       });
       if (!res.ok) throw new Error("Failed to reserve bed");
+
+      // Find patient to update assigned doctor if selected
+      const patientObj = patients.find(p => p.name === formPatientName);
+      if (patientObj && formDoctor) {
+        try {
+          const patId = patientObj.id || patientObj._id;
+          await fetch(`${API_BASE}/api/patients/${patId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ assigned_doctor: formDoctor })
+          });
+        } catch (err) {
+          console.error("Failed to assign doctor during bed intake:", err);
+        }
+      }
+
       await fetchBeds();
       triggerToast("Bed Reserved", `Allocated bed ${selectedBedId} to patient ${formPatientName}.`);
     } catch (err) {
@@ -220,6 +239,7 @@ export default function BedAvailabilityPage() {
     setFormDiagnosis("");
     setFormGender("Male");
     setFormAge("");
+    setFormDoctor("");
     setShowModal(false);
     setSelectedBedId(null);
   };

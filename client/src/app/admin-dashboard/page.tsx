@@ -82,16 +82,11 @@ export default function Dashboard() {
   const [formGender, setFormGender] = useState("Male");
   const [formAge, setFormAge] = useState("");
   const [formEmail, setFormEmail] = useState("");
-  const [displayDate, setDisplayDate] = useState("");
+  const displayDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   const [chartView, setChartView] = useState<"yearly" | "monthly">("yearly");
 
   const statsContainerRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
-
-  // Set local machine date on mount
-  useEffect(() => {
-    setDisplayDate(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
-  }, []);
 
   // Control HTML5 Dialog
   useEffect(() => {
@@ -151,7 +146,9 @@ export default function Dashboard() {
 
   // Fetch metrics from node gateway API
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     fetchMetrics();
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   // Parallax and reveal animations on stats cards using GSAP

@@ -128,18 +128,45 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
       const totalBeds = await Bed.countDocuments();
       const recentPatientsList = await Patient.find().sort({ createdAt: -1 }).limit(10);
       const txns = await Transaction.find();
+      const allInvoices = await Invoice.find();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const paidInvoices = allInvoices.filter((inv: any) => inv.status === 'Paid' || inv.status === 'Partial Paid');
+
+      // Combine transactions and paid/partial-paid invoices as payment records
+      const paymentRecords = [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...txns.map((t: any) => ({
+          amount: parseFloat(t.amount || 0),
+          date: t.date
+        })),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...paidInvoices.map((inv: any) => {
+          let amt = 0;
+          if (inv.status === 'Paid') {
+            amt = parseFloat(inv.amount || 0);
+          } else if (inv.status === 'Partial Paid') {
+            amt = inv.insuranceClaimed ? parseFloat(inv.approvedAmount || 0) : parseFloat(inv.amount || 0) * 0.5;
+          }
+          return {
+            amount: amt,
+            date: inv.date
+          };
+        })
+      ];
       
-      const totalRevenue = txns.reduce((acc: number, curr: any) => acc + parseFloat(curr.amount || 0), 0);
       const doctorsCount = await Doctor.countDocuments();
       const staffCount = await Staff.countDocuments();
 
-      // Calculate weekly revenue from actual transactions in last 7 days
-      const weeklyRevenue = txns.filter((t: any) => {
+      // Calculate weekly revenue from actual payment records in last 7 days
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const weeklyRevenue = paymentRecords.filter((t: any) => {
+        if (!t.date) return false;
         const txnDate = new Date(t.date);
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
         return txnDate >= oneWeekAgo;
-      }).reduce((acc: number, curr: any) => acc + parseFloat(curr.amount || 0), 0);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }).reduce((acc: number, curr: any) => acc + curr.amount, 0);
 
       // Calculate last 6 months revenue for chart
       const monthlyRevenue = [0, 0, 0, 0, 0, 0];
@@ -150,7 +177,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
       const daysInCurrentMonth = new Date(nowYear, nowMonth + 1, 0).getDate();
       const dailyRevenue = new Array(daysInCurrentMonth).fill(0);
 
-      for (const t of txns) {
+      for (const t of paymentRecords) {
         if (!t.date) continue;
         const parts = t.date.split('-');
         if (parts.length === 3) {
@@ -160,12 +187,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
 
           const monthDiff = (nowYear - tYear) * 12 + (nowMonth - tMonth);
           if (monthDiff >= 0 && monthDiff < 6) {
-            monthlyRevenue[5 - monthDiff] += parseFloat(t.amount || 0);
+            monthlyRevenue[5 - monthDiff] += t.amount;
           }
 
           if (tMonth === nowMonth && tYear === nowYear) {
             if (tDay >= 1 && tDay <= daysInCurrentMonth) {
-              dailyRevenue[tDay - 1] += parseFloat(t.amount || 0);
+              dailyRevenue[tDay - 1] += t.amount;
             }
           }
         }

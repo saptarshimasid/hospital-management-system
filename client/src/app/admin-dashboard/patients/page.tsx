@@ -67,7 +67,7 @@ export default function PatientsPage() {
   const [formAge, setFormAge] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [formImg, setFormImg] = useState("");
-  const [displayDate, setDisplayDate] = useState("");
+  const displayDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   const statsContainerRef = useRef<HTMLDivElement>(null);
   const addDialogRef = useRef<HTMLDialogElement>(null);
@@ -75,10 +75,6 @@ export default function PatientsPage() {
 
   // Fetch Patients on Mount
   useEffect(() => {
-    const today = new Date();
-    setDisplayDate(
-      today.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-    );
     fetchPatients();
   }, []);
 
@@ -125,7 +121,7 @@ export default function PatientsPage() {
     }, 4000);
   };
 
-  const fetchPatients = async () => {
+  async function fetchPatients() {
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE}/api/patients`);
@@ -278,6 +274,36 @@ export default function PatientsPage() {
       });
       triggerToast("Patient Removed", `${name} was filtered out from clinical view.`, "error");
     }
+  };
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/patients/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        triggerToast("Status Updated", `Patient status updated to ${newStatus}.`);
+        fetchPatients();
+      } else {
+        throw new Error("Failed to update patient status on server");
+      }
+    } catch (err) {
+      console.error(err);
+      setPatients((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
+      );
+      triggerToast("Status Updated (Local)", `Patient status updated to ${newStatus}.`);
+    }
+  };
+
+  const getPatientStatusStyle = (status: string) => {
+    const s = (status || "").toLowerCase();
+    if (s === "stable") return "bg-tertiary-container/10 text-tertiary-container border border-tertiary-container/20";
+    if (s === "under observation" || s === "treatment") return "bg-secondary-container/10 text-secondary-container border border-secondary-container/20";
+    if (s === "urgent") return "bg-error/10 text-error border border-error/20 animate-pulse";
+    return "bg-primary-container/10 text-primary-container border border-primary-container/20";
   };
 
   // Filter patients
@@ -503,20 +529,17 @@ export default function PatientsPage() {
                         <span>{patient.admission}</span>
                       </span>
                     </td>
-                    <td className="py-4">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          patient.status.toLowerCase() === "stable"
-                            ? "bg-tertiary-container/10 text-tertiary-container border border-tertiary-container/20"
-                            : patient.status.toLowerCase() === "treatment"
-                            ? "bg-secondary-container/10 text-secondary-container border border-secondary-container/20"
-                            : patient.status.toLowerCase() === "urgent"
-                            ? "bg-error/10 text-error border border-error/20 animate-pulse"
-                            : "bg-primary-container/10 text-primary-container border border-primary-container/20"
-                        }`}
+                    <td className="py-4" onClick={(e) => e.stopPropagation()}>
+                      <select
+                        value={patient.status}
+                        onChange={(e) => handleStatusChange(patient.id, e.target.value)}
+                        className={`bg-[#060e20]/60 border border-white/10 rounded-xl py-1 px-2 text-[10px] font-bold uppercase tracking-wider ${getPatientStatusStyle(patient.status)} focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer`}
                       >
-                        {patient.status}
-                      </span>
+                        <option value="Pending" className="bg-[#0b1326] text-primary-container">Pending</option>
+                        <option value="Stable" className="bg-[#0b1326] text-tertiary-container">Stable</option>
+                        <option value="Under Observation" className="bg-[#0b1326] text-secondary-container">Under Observation</option>
+                        <option value="Urgent" className="bg-[#0b1326] text-error">Urgent</option>
+                      </select>
                     </td>
                     <td className="py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">

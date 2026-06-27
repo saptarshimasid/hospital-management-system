@@ -228,9 +228,9 @@ export default function BillingPage() {
 
   // Stats calculation
   const totalBilledToday = invoices.reduce((acc, curr) => acc + curr.amount, 0);
-  const outstandingClaims = claims.length;
+  const outstandingClaims = invoices.filter((i) => i.insuranceClaimed && i.status !== "Paid").length;
   const paidCount = invoices.filter((i) => i.status === "Paid").length;
-  const overdueCount = invoices.filter((i) => i.status === "Overdue").length;
+  const overdueCount = invoices.filter((i) => i.status !== "Paid").length;
 
   useEffect(() => {
     if (statsContainerRef.current) {

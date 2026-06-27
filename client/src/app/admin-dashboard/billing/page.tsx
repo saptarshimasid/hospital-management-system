@@ -291,7 +291,10 @@ export default function BillingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error("Failed to save invoice");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to save invoice");
+      }
       
       const savedInvoice = await res.json();
       await fetchInvoices();
@@ -369,7 +372,8 @@ export default function BillingPage() {
         setPolicyPatientName("");
         setPolicyPlan("Standard");
       } else {
-        throw new Error("Failed to purchase policy");
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to purchase policy");
       }
     } catch (err) {
       console.error(err);

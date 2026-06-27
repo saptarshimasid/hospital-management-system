@@ -426,9 +426,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
     }
 
     if (path === 'invoices') {
-      const invoice = new Invoice(body);
-      await invoice.save();
-      return NextResponse.json(invoice, { status: 201 });
+      try {
+        const invoice = new Invoice(body);
+        await invoice.save();
+        return NextResponse.json(invoice, { status: 201 });
+      } catch (err: any) {
+        console.error("POST /api/invoices Error:", err);
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
     }
 
     if (path === 'transactions') {

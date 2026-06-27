@@ -284,8 +284,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
     }
 
     if (path === 'admin-profile') {
-      const profiles = await AdminProfile.find({ id: 'admin' }).limit(1);
-      let profile = profiles[0] || null;
+      let profile = await AdminProfile.findById('admin');
       if (!profile) {
         profile = new AdminProfile({
           id: 'admin',
@@ -456,8 +455,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
 
     if (path === 'admin-profile') {
       try {
-        const profiles = await AdminProfile.find({ id: 'admin' }).limit(1);
-        let profile = profiles[0] || null;
+        let profile = await AdminProfile.findById('admin');
         if (profile) {
           Object.assign(profile, body);
           await profile.save();

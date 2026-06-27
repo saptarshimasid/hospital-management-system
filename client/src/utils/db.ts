@@ -161,13 +161,42 @@ class Model {
 
       if (existing) {
         // UPDATE existing record
-        const { data: updated, error } = await supabase
+        let { data: updated, error } = await supabase
           .from(this._tableName)
           .update(data)
           .eq('id', existingId)
           .select()
           .single();
-        if (error) throw new Error(error.message);
+        
+        if (error) {
+          const isMissingColumn = error.message.includes('column') && (
+            error.message.includes('insurance_claimed') ||
+            error.message.includes('claimed_amount') ||
+            error.message.includes('approved_amount')
+          );
+          if (isMissingColumn) {
+            console.warn('[Supabase DB] Retrying update without new insurance columns due to stale schema cache:', error.message);
+            const prunedData = { ...data };
+            delete prunedData['insurance_claimed'];
+            delete prunedData['claimed_amount'];
+            delete prunedData['approved_amount'];
+
+            const retryResult = await supabase
+              .from(this._tableName)
+              .update(prunedData)
+              .eq('id', existingId)
+              .select()
+              .single();
+
+            if (retryResult.error) {
+              throw new Error(retryResult.error.message);
+            }
+            updated = retryResult.data;
+            error = null;
+          } else {
+            throw new Error(error.message);
+          }
+        }
         Object.assign(this, mapRow(updated, this._tableName));
         return this;
       }
@@ -178,12 +207,40 @@ class Model {
       data['id'] = this.id;
     }
 
-    const { data: inserted, error } = await supabase
+    let { data: inserted, error } = await supabase
       .from(this._tableName)
       .insert(data)
       .select()
       .single();
-    if (error) throw new Error(error.message);
+
+    if (error) {
+      const isMissingColumn = error.message.includes('column') && (
+        error.message.includes('insurance_claimed') ||
+        error.message.includes('claimed_amount') ||
+        error.message.includes('approved_amount')
+      );
+      if (isMissingColumn) {
+        console.warn('[Supabase DB] Retrying insert without new insurance columns due to stale schema cache:', error.message);
+        const prunedData = { ...data };
+        delete prunedData['insurance_claimed'];
+        delete prunedData['claimed_amount'];
+        delete prunedData['approved_amount'];
+
+        const retryResult = await supabase
+          .from(this._tableName)
+          .insert(prunedData)
+          .select()
+          .single();
+
+        if (retryResult.error) {
+          throw new Error(retryResult.error.message);
+        }
+        inserted = retryResult.data;
+        error = null;
+      } else {
+        throw new Error(error.message);
+      }
+    }
     Object.assign(this, mapRow(inserted, this._tableName));
     return this;
   }

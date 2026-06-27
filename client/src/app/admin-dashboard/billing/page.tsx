@@ -404,6 +404,13 @@ export default function BillingPage() {
     return patientInvoices.some((inv) => inv.status !== "Paid");
   });
 
+  const fullyPaidPatients = patients.filter((p) => {
+    const patientInvoices = invoices.filter(
+      (inv) => inv.patientName?.toLowerCase() === p.name?.toLowerCase()
+    );
+    return patientInvoices.length > 0 && patientInvoices.every((inv) => inv.status === "Paid");
+  });
+
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "Paid":
@@ -676,7 +683,7 @@ export default function BillingPage() {
                   className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
                 >
                   <option value="" disabled>Select Patient...</option>
-                  {patients.map((p, i) => (
+                  {fullyPaidPatients.map((p, i) => (
                     <option key={i} value={p.name}>{p.name}</option>
                   ))}
                 </select>

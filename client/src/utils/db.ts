@@ -8,6 +8,9 @@ function mapColToKey(col: string): string {
   if (col === 'test_type') return 'testType';
   if (col === 'test_date') return 'testDate';
   if (col === 'delivery_time') return 'deliveryTime';
+  if (col === 'insurance_claimed') return 'insuranceClaimed';
+  if (col === 'claimed_amount') return 'claimedAmount';
+  if (col === 'approved_amount') return 'approvedAmount';
   return col;
 }
 
@@ -18,6 +21,9 @@ function mapKeyToCol(key: string): string {
   if (key === 'testType') return 'test_type';
   if (key === 'testDate') return 'test_date';
   if (key === 'deliveryTime') return 'delivery_time';
+  if (key === 'insuranceClaimed') return 'insurance_claimed';
+  if (key === 'claimedAmount') return 'claimed_amount';
+  if (key === 'approvedAmount') return 'approved_amount';
   return key;
 }
 
@@ -46,7 +52,7 @@ const tableFields: Record<string, string[]> = {
   transactions: ['patient_name', 'type', 'amount', 'method', 'date', 'gender', 'age', 'email'],
   beds: ['id', 'ward', 'status', 'patient', 'diagnosis', 'timer', 'gender', 'age'],
   surgeries: ['room', 'patient_name', 'surgeon', 'procedure', 'time', 'status', 'img', 'gender', 'age'],
-  invoices: ['patient_name', 'dept', 'services', 'amount', 'date', 'status', 'gender', 'age'],
+  invoices: ['patient_name', 'dept', 'services', 'amount', 'date', 'status', 'gender', 'age', 'insurance_claimed', 'claimed_amount', 'approved_amount'],
   medications: ['name', 'category', 'dosage', 'sku', 'quantity', 'status'],
   prescriptions: ['patient_name', 'drug', 'dosage', 'date', 'status'],
   reports: ['name', 'category', 'date', 'size', 'author'],

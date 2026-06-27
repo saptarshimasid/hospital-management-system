@@ -102,9 +102,18 @@ CREATE TABLE IF NOT EXISTS invoices (
   status TEXT DEFAULT 'Pending',
   gender TEXT,
   age INTEGER,
+  insurance_claimed BOOLEAN DEFAULT FALSE,
+  claimed_amount NUMERIC DEFAULT 0,
+  approved_amount NUMERIC DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Safely add columns to invoices if the table already exists
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS insurance_claimed BOOLEAN DEFAULT FALSE;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS claimed_amount NUMERIC DEFAULT 0;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS approved_amount NUMERIC DEFAULT 0;
+
 
 -- Create Table: medications
 CREATE TABLE IF NOT EXISTS medications (

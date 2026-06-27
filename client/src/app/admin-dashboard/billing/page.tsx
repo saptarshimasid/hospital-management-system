@@ -28,9 +28,12 @@ interface Invoice {
   services: string;
   amount: number;
   date: string;
-  status: "Paid" | "Pending" | "Overdue";
+  status: "Paid" | "Pending" | "Overdue" | "Partial Paid";
   gender?: string;
   age?: number;
+  insuranceClaimed?: boolean;
+  claimedAmount?: number;
+  approvedAmount?: number;
 }
 
 interface Claim {
@@ -83,13 +86,16 @@ export default function BillingPage() {
   const [formAmount, setFormAmount] = useState("");
   const [formServices, setFormServices] = useState("");
   const [formDate, setFormDate] = useState("");
-  const [formStatus, setFormStatus] = useState<"Paid" | "Pending" | "Overdue">("Pending");
+  const [formStatus, setFormStatus] = useState<"Paid" | "Pending" | "Overdue" | "Partial Paid">("Pending");
   const [formGender, setFormGender] = useState("Male");
   const [formAge, setFormAge] = useState("");
   const [displayDate, setDisplayDate] = useState("");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [beds, setBeds] = useState<Bed[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [formInsuranceClaimed, setFormInsuranceClaimed] = useState(false);
+  const [formClaimedAmount, setFormClaimedAmount] = useState("");
+  const [formApprovedAmount, setFormApprovedAmount] = useState("");
 
   const statsContainerRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -201,6 +207,23 @@ export default function BillingPage() {
     }
   };
 
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/invoices/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        triggerToast("Invoice Status Updated", `Invoice marked as ${newStatus}.`);
+        fetchInvoices();
+      }
+    } catch (err) {
+      console.error(err);
+      triggerToast("Update Error", "Could not change status.", "error");
+    }
+  };
+
   // Stats calculation
   const totalBilledToday = invoices.reduce((acc, curr) => acc + curr.amount, 0);
   const outstandingClaims = claims.length;
@@ -255,6 +278,9 @@ export default function BillingPage() {
       status: formStatus,
       gender: formGender,
       age: parseInt(formAge) || 0,
+      insuranceClaimed: formInsuranceClaimed,
+      claimedAmount: formInsuranceClaimed ? (parseFloat(formClaimedAmount) || 0) : 0,
+      approvedAmount: formInsuranceClaimed ? (parseFloat(formApprovedAmount) || 0) : 0,
     };
 
     try {
@@ -298,6 +324,9 @@ export default function BillingPage() {
     setFormStatus("Pending");
     setFormGender("Male");
     setFormAge("");
+    setFormInsuranceClaimed(false);
+    setFormClaimedAmount("");
+    setFormApprovedAmount("");
   };
 
   const submitClaim = (claimId: string, invoiceId: string, amount: number) => {
@@ -321,6 +350,8 @@ export default function BillingPage() {
         return "bg-tertiary-container/10 text-tertiary-container border border-tertiary-container/20";
       case "Pending":
         return "bg-secondary-container/10 text-secondary-container border border-secondary-container/20";
+      case "Partial Paid":
+        return "bg-[#e8a317]/10 text-[#e8a317] border border-[#e8a317]/20";
       default:
         return "bg-error/10 text-error border border-error/20";
     }
@@ -332,6 +363,8 @@ export default function BillingPage() {
         return "text-[#62fae3]";
       case "Pending":
         return "text-secondary-fixed-dim";
+      case "Partial Paid":
+        return "text-[#e8a317]";
       default:
         return "text-[#ffb4ab]";
     }
@@ -460,6 +493,7 @@ export default function BillingPage() {
                 <option value="Paid">Paid</option>
                 <option value="Pending">Pending</option>
                 <option value="Overdue">Overdue</option>
+                <option value="Partial Paid">Partial Paid</option>
               </select>
             </div>
           </div>
@@ -473,6 +507,7 @@ export default function BillingPage() {
                   <th className="pb-3.5">Department</th>
                   <th className="pb-3.5">Diagnosis / Services</th>
                   <th className="pb-3.5">Amount</th>
+                  <th className="pb-3.5">Insurance</th>
                   <th className="pb-3.5">Issued Date</th>
                   <th className="pb-3.5">Status</th>
                 </tr>
@@ -495,11 +530,29 @@ export default function BillingPage() {
                       <td className={`py-3 font-bold ${getAmountColor(inv.status)}`}>
                         ${inv.amount.toLocaleString()}
                       </td>
+                      <td className="py-3 text-[10px] font-mono">
+                        {inv.insuranceClaimed ? (
+                          <div className="flex flex-col text-[#62fae3]">
+                            <span className="font-bold text-[9px] uppercase tracking-wider text-secondary-fixed">Claimed</span>
+                            <span>Claim: ${inv.claimedAmount?.toLocaleString()}</span>
+                            <span className="text-[9px] text-on-surface-variant">Appr: ${inv.approvedAmount?.toLocaleString()}</span>
+                          </div>
+                        ) : (
+                          <span className="text-on-surface-variant/40 italic">None</span>
+                        )}
+                      </td>
                       <td className="py-3 text-on-surface-variant">{inv.date}</td>
                       <td className="py-3">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${getStatusBadgeClass(inv.status)}`}>
-                          {inv.status}
-                        </span>
+                        <select
+                          value={inv.status}
+                          onChange={(e) => handleStatusChange(inv.id, e.target.value)}
+                          className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${getStatusBadgeClass(inv.status)} focus:outline-none cursor-pointer bg-transparent border-0`}
+                        >
+                          <option value="Paid" className="bg-[#0b1326] text-on-surface">Paid</option>
+                          <option value="Pending" className="bg-[#0b1326] text-on-surface">Pending</option>
+                          <option value="Overdue" className="bg-[#0b1326] text-on-surface">Overdue</option>
+                          <option value="Partial Paid" className="bg-[#0b1326] text-on-surface">Partial Paid</option>
+                        </select>
                       </td>
                     </motion.tr>
                   ))}
@@ -682,8 +735,59 @@ export default function BillingPage() {
                 <option value="Paid">Paid</option>
                 <option value="Pending">Pending</option>
                 <option value="Overdue">Overdue</option>
+                <option value="Partial Paid">Partial Paid</option>
               </select>
             </div>
+          </div>
+
+          {/* Insurance Section */}
+          <div className="border-t border-white/5 pt-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="insuranceClaimed"
+                checked={formInsuranceClaimed}
+                onChange={(e) => setFormInsuranceClaimed(e.target.checked)}
+                className="w-4 h-4 rounded bg-[#060e20]/60 border border-white/10 text-primary-container focus:ring-0 focus:ring-offset-0 cursor-pointer"
+              />
+              <label htmlFor="insuranceClaimed" className="text-xs font-bold text-primary-container cursor-pointer select-none">
+                Claim Insurance?
+              </label>
+            </div>
+
+            {formInsuranceClaimed && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="grid grid-cols-2 gap-4"
+              >
+                <div className="space-y-1">
+                  <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Claimed Amount ($)</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    value={formClaimedAmount}
+                    onChange={(e) => setFormClaimedAmount(e.target.value)}
+                    className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]"
+                    placeholder="e.g. 1200"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Approved Amount ($)</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    value={formApprovedAmount}
+                    onChange={(e) => setFormApprovedAmount(e.target.value)}
+                    className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff]"
+                    placeholder="e.g. 1000"
+                  />
+                </div>
+              </motion.div>
+            )}
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
             <button

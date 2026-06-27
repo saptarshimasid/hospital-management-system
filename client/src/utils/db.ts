@@ -62,7 +62,8 @@ const tableFields: Record<string, string[]> = {
   pantry_orders: ['patient_name', 'room', 'item', 'quantity', 'status', 'delivery_time'],
   diagnoses: ['patient_name', 'age', 'gender', 'doctor_name', 'test_type', 'test_date', 'results', 'status'],
   pantry_inventory: ['name', 'stock', 'unit'],
-  dashboard_pages: ['name', 'href', 'icon', 'subtitle', 'status', 'order_index']
+  dashboard_pages: ['name', 'href', 'icon', 'subtitle', 'status', 'order_index'],
+  admin_profile: ['id', 'name', 'age', 'designation', 'email', 'img']
 };
 
 // Apply build-time dynamic routes fields schema metadata
@@ -362,6 +363,7 @@ export const PantryOrder = makeModelInterface('pantry_orders');
 export const Diagnosis = makeModelInterface('diagnoses');
 export const PantryInventory = makeModelInterface('pantry_inventory');
 export const DashboardPage = makeModelInterface('dashboard_pages');
+export const AdminProfile = makeModelInterface('admin_profile');
 
 // Export dynamically built models
 const exportsMap: Record<string, any> = {};

@@ -61,29 +61,48 @@ export default function DashboardLayout({
   const [profileOpen, setProfileOpen] = useState(false);
   const profileDialogRef = useRef<HTMLDialogElement>(null);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("user_profile");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-          setProfile({
-            img: typeof parsed.img === "string" ? parsed.img : defaultProfile.img,
-            name: typeof parsed.name === "string" ? parsed.name : defaultProfile.name,
-            age: typeof parsed.age === "number" ? parsed.age : (parseInt(parsed.age) || defaultProfile.age),
-            email: typeof parsed.email === "string" ? parsed.email : defaultProfile.email,
-            designation: typeof parsed.designation === "string" ? parsed.designation : defaultProfile.designation
-          });
-        }
-      } catch (e) {
-        console.error("Error loading user profile from localStorage:", e);
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin-profile`);
+      if (res.ok) {
+        const data = await res.json();
+        setProfile({
+          img: data.img || defaultProfile.img,
+          name: data.name || defaultProfile.name,
+          age: data.age || defaultProfile.age,
+          email: data.email || defaultProfile.email,
+          designation: data.designation || defaultProfile.designation
+        });
       }
+    } catch (err) {
+      console.error("Error fetching admin profile:", err);
     }
+  };
+
+  useEffect(() => {
+    fetchProfile();
   }, []);
 
   const saveProfile = (newProfile: typeof defaultProfile) => {
     setProfile(newProfile);
-    localStorage.setItem("user_profile", JSON.stringify(newProfile));
+  };
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_BASE}/api/admin-profile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile)
+      });
+      if (res.ok) {
+        setProfileOpen(false);
+      } else {
+        console.error("Failed to save profile");
+      }
+    } catch (err) {
+      console.error("Error saving profile:", err);
+    }
   };
 
   useEffect(() => {
@@ -437,10 +456,7 @@ export default function DashboardLayout({
           </div>
 
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setProfileOpen(false);
-            }}
+            onSubmit={handleProfileSubmit}
             className="space-y-4"
           >
             {/* Image Upload Option */}

@@ -15,6 +15,7 @@ import {
   NotificationModel,
   PantryOrder,
   Diagnosis,
+  AdminProfile,
   supabase,
   mapRow
 } from '@/utils/db';
@@ -270,6 +271,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
       });
     }
 
+    if (path === 'admin-profile') {
+      const profiles = await AdminProfile.find({ id: 'admin' }).limit(1);
+      let profile = profiles[0] || null;
+      if (!profile) {
+        profile = new AdminProfile({
+          id: 'admin',
+          name: 'Dr. Sarah Jenkins',
+          age: 42,
+          email: 'sarah.jenkins@hospital.com',
+          designation: 'Chief Medical Officer',
+          img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o'
+        });
+        await profile.save();
+      }
+      return NextResponse.json(profile);
+    }
+
     if (path === 'patients') {
       const list = await Patient.find().sort({ createdAt: -1 });
       return NextResponse.json(list);
@@ -422,6 +440,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
       });
       await notif.save();
       return NextResponse.json(surgery, { status: 201 });
+    }
+
+    if (path === 'admin-profile') {
+      try {
+        const profiles = await AdminProfile.find({ id: 'admin' }).limit(1);
+        let profile = profiles[0] || null;
+        if (profile) {
+          Object.assign(profile, body);
+          await profile.save();
+        } else {
+          profile = new AdminProfile({ id: 'admin', ...body });
+          await profile.save();
+        }
+        return NextResponse.json(profile);
+      } catch (err: any) {
+        console.error("POST /api/admin-profile Error:", err);
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
     }
 
     if (path === 'invoices') {

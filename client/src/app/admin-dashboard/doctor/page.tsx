@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { API_BASE } from "@/utils/api";
 
@@ -73,7 +74,7 @@ export default function DoctorPage() {
   const [formEmail, setFormEmail] = useState("");
   const [formSchedule, setFormSchedule] = useState("08:00 - 16:00");
   const [formImg, setFormImg] = useState("");
-  const [displayDate, setDisplayDate] = useState("");
+  const displayDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   const statsContainerRef = useRef<HTMLDivElement>(null);
   const addDialogRef = useRef<HTMLDialogElement>(null);
@@ -81,7 +82,6 @@ export default function DoctorPage() {
 
   // Fetch Doctors on Mount
   useEffect(() => {
-    setDisplayDate(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     fetchDoctors();
   }, []);
 
@@ -128,7 +128,7 @@ export default function DoctorPage() {
     }, 4000);
   };
 
-  const fetchDoctors = async () => {
+  async function fetchDoctors() {
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE}/api/doctors`);
@@ -272,6 +272,28 @@ export default function DoctorPage() {
         return updated;
       });
       triggerToast("Doctor Removed", `${name} was filtered out from clinical view.`, "error");
+    }
+  };
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/doctors/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        triggerToast("Status Updated", `Doctor status changed to ${newStatus}.`);
+        fetchDoctors();
+      } else {
+        throw new Error("Failed to update status on server");
+      }
+    } catch (err) {
+      console.error(err);
+      setDoctors((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, status: newStatus as any } : d))
+      );
+      triggerToast("Status Updated (Local)", `Doctor status changed to ${newStatus}.`);
     }
   };
 
@@ -479,9 +501,16 @@ export default function DoctorPage() {
                     <td className="py-3.5 text-on-surface-variant font-mono text-[10px]">{doc.email}</td>
                     <td className="py-3.5 text-on-surface-variant">{doc.schedule}</td>
                     <td className="py-3.5">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${getStatusStyle(doc.status)}`}>
-                        {doc.status}
-                      </span>
+                      <select
+                        value={doc.status}
+                        onChange={(e) => handleStatusChange(doc.id, e.target.value)}
+                        className={`bg-[#060e20]/60 border border-white/10 rounded-xl py-1 px-2 text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(doc.status)} focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer`}
+                      >
+                        <option value="available" className="bg-[#0b1326] text-[#00f0ff]">available</option>
+                        <option value="busy" className="bg-[#0b1326] text-[#ff4d4d]">busy</option>
+                        <option value="consulting" className="bg-[#0b1326] text-[#secondary-container]">consulting</option>
+                        <option value="off-duty" className="bg-[#0b1326] text-on-surface-variant">off duty</option>
+                      </select>
                     </td>
                     <td className="py-3.5 text-right">
                       <div className="flex items-center justify-end gap-2">

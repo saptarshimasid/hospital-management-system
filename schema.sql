@@ -359,3 +359,27 @@ ALTER TABLE IF EXISTS pantry_inventory DISABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS dashboard_pages DISABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS "admin" DISABLE ROW LEVEL SECURITY;
 
+-- Create Table: admin_profile
+CREATE TABLE IF NOT EXISTS admin_profile (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  age INTEGER NOT NULL,
+  designation TEXT NOT NULL,
+  email TEXT NOT NULL,
+  img TEXT
+);
+
+-- Seed default admin profile
+INSERT INTO admin_profile (id, name, age, designation, email, img)
+VALUES (
+  'admin',
+  'Dr. Sarah Jenkins',
+  42,
+  'sarah.jenkins@hospital.com',
+  'Chief Medical Officer',
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuDtYyYVa3FO9vaPrSmBZelDD_KjbHR9c0d1sFS2ODZT3zokO4XbsJeqP096Xkr0RoDzPiQ8-lkbZpHJyvvJ7j21EGO7lGSTMeCeT7hhi6oyx73Eli3DNRBQnSLTnDVcZMxJpb_M3MECQI7qTjL70ix4Gxu1TP0f8N6RqMwmjNpCRHb8fKAFNds0YE3kmFNu6WbBu6ChXmq4c1uxQcoG1h7yt6xPbGwGEWyJGfzjpEtSLYrApKCoZaKLZLuqiyiSPJIcExvIpS7Qf8o'
+)
+ON CONFLICT (id) DO NOTHING;
+
+ALTER TABLE IF EXISTS admin_profile DISABLE ROW LEVEL SECURITY;
+

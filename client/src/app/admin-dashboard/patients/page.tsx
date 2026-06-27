@@ -34,6 +34,7 @@ interface Patient {
   age?: number;
   email?: string;
   createdAt?: string;
+  assignedDoctor?: string;
 }
 
 interface ToastMessage {
@@ -68,6 +69,7 @@ export default function PatientsPage() {
   const [formEmail, setFormEmail] = useState("");
   const [formImg, setFormImg] = useState("");
   const displayDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const [availableDoctors, setAvailableDoctors] = useState<{id: string; name: string; status: string}[]>([]);
 
   const statsContainerRef = useRef<HTMLDivElement>(null);
   const addDialogRef = useRef<HTMLDialogElement>(null);
@@ -76,7 +78,20 @@ export default function PatientsPage() {
   // Fetch Patients on Mount
   useEffect(() => {
     fetchPatients();
+    fetchDoctors();
   }, []);
+
+  async function fetchDoctors() {
+    try {
+      const res = await fetch(`${API_BASE}/api/doctors`);
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableDoctors(data.map((d: any) => ({ id: d._id || d.id, name: d.name, status: d.status })));
+      }
+    } catch (err) {
+      console.error("Failed to fetch doctors", err);
+    }
+  }
 
   // GSAP animation
   useEffect(() => {
@@ -130,6 +145,7 @@ export default function PatientsPage() {
         const mapped = data.map((p: any) => ({
           ...p,
           id: p._id || p.id,
+          assignedDoctor: p.assigned_doctor || p.assignedDoctor || "",
         }));
         setPatients(mapped);
         localStorage.setItem("local_patients", JSON.stringify(mapped));
@@ -295,6 +311,28 @@ export default function PatientsPage() {
         prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
       );
       triggerToast("Status Updated (Local)", `Patient status updated to ${newStatus}.`);
+    }
+  };
+
+  const handleDoctorAssign = async (id: string, doctorName: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/patients/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assigned_doctor: doctorName })
+      });
+      if (res.ok) {
+        triggerToast("Doctor Assigned", `Patient assigned to ${doctorName || "no doctor"}.`);
+        fetchPatients();
+      } else {
+        throw new Error("Failed to assign doctor");
+      }
+    } catch (err) {
+      console.error(err);
+      setPatients((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, assignedDoctor: doctorName } : p))
+      );
+      triggerToast("Doctor Assigned (Local)", `Patient assigned to ${doctorName || "no doctor"}.`);
     }
   };
 
@@ -490,6 +528,7 @@ export default function PatientsPage() {
                   <th className="pb-4 font-semibold">Clinical Diagnostics</th>
                   <th className="pb-4 font-semibold">Admitted Stamp</th>
                   <th className="pb-4 font-semibold">Clinical Status</th>
+                  <th className="pb-4 font-semibold">Assigned Doctor</th>
                   <th className="pb-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
@@ -539,6 +578,18 @@ export default function PatientsPage() {
                         <option value="Stable" className="bg-[#0b1326] text-tertiary-container">Stable</option>
                         <option value="Under Observation" className="bg-[#0b1326] text-secondary-container">Under Observation</option>
                         <option value="Urgent" className="bg-[#0b1326] text-error">Urgent</option>
+                      </select>
+                    </td>
+                    <td className="py-4" onClick={(e) => e.stopPropagation()}>
+                      <select
+                        value={patient.assignedDoctor || ""}
+                        onChange={(e) => handleDoctorAssign(patient.id, e.target.value)}
+                        className="bg-[#060e20]/60 border border-white/10 rounded-xl py-1 px-2 text-[10px] font-semibold text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer max-w-[140px]"
+                      >
+                        <option value="" className="bg-[#0b1326]">Not Assigned</option>
+                        {availableDoctors.filter(d => d.status === 'available').map(d => (
+                          <option key={d.id} value={d.name} className="bg-[#0b1326]">{d.name}</option>
+                        ))}
                       </select>
                     </td>
                     <td className="py-4 text-right" onClick={(e) => e.stopPropagation()}>

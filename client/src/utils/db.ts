@@ -47,7 +47,7 @@ export function mapRow(row: any, _tableName?: string): any {
 
 // Fields metadata for table schemas
 const tableFields: Record<string, string[]> = {
-  patients: ['name', 'condition', 'admission', 'status', 'img', 'gender', 'age', 'email'],
+  patients: ['name', 'condition', 'admission', 'status', 'img', 'gender', 'age', 'email', 'assigned_doctor'],
   appointments: ['name', 'doctor', 'dept', 'time', 'date', 'status', 'img', 'gender', 'age', 'email'],
   transactions: ['patient_name', 'type', 'amount', 'method', 'date', 'gender', 'age', 'email'],
   beds: ['id', 'ward', 'status', 'patient', 'diagnosis', 'timer', 'gender', 'age'],

@@ -269,6 +269,28 @@ export default function StaffPage() {
     }
   };
 
+  const handleStaffStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/staff/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        triggerToast("Status Updated", `Staff status changed to ${newStatus}.`);
+        fetchStaff();
+      } else {
+        throw new Error("Failed to update status");
+      }
+    } catch (err) {
+      console.error(err);
+      setStaffList((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, status: newStatus as any } : s))
+      );
+      triggerToast("Status Updated (Local)", `Staff status changed to ${newStatus}.`);
+    }
+  };
+
   // Filter Staff
   const filteredStaff = staffList.filter((staff) => {
     const matchesSearch =
@@ -473,9 +495,15 @@ export default function StaffPage() {
                     <td className="py-3.5 text-on-surface-variant font-semibold">{staff.dept}</td>
                     <td className="py-3.5 text-on-surface-variant font-mono text-[10px]">{staff.shift}</td>
                     <td className="py-3.5">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${getStatusStyle(staff.status)}`}>
-                        {staff.status}
-                      </span>
+                      <select
+                        value={staff.status}
+                        onChange={(e) => handleStaffStatusChange(staff.id, e.target.value)}
+                        className={`bg-[#060e20]/60 border border-white/10 rounded-xl py-1 px-2 text-[10px] font-bold uppercase tracking-wider ${getStatusStyle(staff.status)} focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer`}
+                      >
+                        <option value="active" className="bg-[#0b1326]">Active</option>
+                        <option value="on-leave" className="bg-[#0b1326]">On Leave</option>
+                        <option value="inactive" className="bg-[#0b1326]">Inactive</option>
+                      </select>
                     </td>
                     <td className="py-3.5 text-right">
                       <div className="flex items-center justify-end gap-2">

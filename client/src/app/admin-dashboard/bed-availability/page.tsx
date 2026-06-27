@@ -62,17 +62,31 @@ export default function BedAvailabilityPage() {
   const [formDiagnosis, setFormDiagnosis] = useState("");
   const [formGender, setFormGender] = useState("Male");
   const [formAge, setFormAge] = useState("");
-  const [displayDate, setDisplayDate] = useState("");
+  const [formDoctor, setFormDoctor] = useState("");
+  const displayDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const [availableDoctors, setAvailableDoctors] = useState<{id: string; name: string; status: string}[]>([]);
 
   const statsContainerRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   // Set local machine date on mount and load beds
   useEffect(() => {
-    setDisplayDate(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     fetchBeds();
     fetchPatients();
+    fetchDoctors();
   }, []);
+
+  async function fetchDoctors() {
+    try {
+      const res = await fetch(`${API_BASE}/api/doctors`);
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableDoctors(data.map((d: any) => ({ id: d._id || d.id, name: d.name, status: d.status })));
+      }
+    } catch (err) {
+      console.error("Failed to fetch doctors", err);
+    }
+  }
 
   async function fetchPatients() {
     try {
@@ -613,17 +627,31 @@ export default function BedAvailabilityPage() {
               />
             </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Diagnosis / Case Details</label>
-            <input
-              type="text"
-              required
-              value={formDiagnosis}
-              onChange={(e) => setFormDiagnosis(e.target.value)}
-              className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff]"
-              placeholder="e.g. Post-OP Recovery"
-            />
-          </div>
+            <div className="space-y-1">
+              <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Diagnosis / Case Details</label>
+              <input
+                type="text"
+                required
+                value={formDiagnosis}
+                onChange={(e) => setFormDiagnosis(e.target.value)}
+                className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff]"
+                placeholder="e.g. Post-OP Recovery"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Assign Doctor</label>
+              <select
+                value={formDoctor}
+                onChange={(e) => setFormDoctor(e.target.value)}
+                className="w-full bg-[#060e20]/60 border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-[#00f0ff] focus:border-[#00f0ff] cursor-pointer"
+              >
+                <option value="" className="bg-[#0b1326]">Not Assigned</option>
+                {availableDoctors.filter(d => d.status === 'available').map(d => (
+                  <option key={d.id} value={d.name} className="bg-[#0b1326]">{d.name}</option>
+                ))}
+              </select>
+            </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
             <button

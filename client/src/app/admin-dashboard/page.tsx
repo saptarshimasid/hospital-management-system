@@ -127,12 +127,24 @@ export default function Dashboard() {
           weeklyRevenue: { value: "$52,480", change: "+8.4%", type: "increase" },
           bedAvailability: { value: "14 / 50", status: "Stable", occupancyRate: "72%" }
         },
-        departments: [
-          { name: "Cardiology", value: 32 },
-          { name: "Neurology", value: 24 },
-          { name: "Pediatrics", value: 18 },
-          { name: "General Medicine", value: 26 }
-        ],
+        departments: (() => {
+          const deptCounts: Record<string, number> = {};
+          doctorsList.forEach((d: any) => {
+            const dept = d.dept || 'General';
+            deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+          });
+          const total = Math.max(doctorsList.length, 1);
+          const depts = Object.entries(deptCounts).map(([name, count]) => ({
+            name,
+            value: Math.round((count / total) * 100)
+          }));
+          return depts.length > 0 ? depts : [
+            { name: "Cardiology", value: 32 },
+            { name: "Neurology", value: 24 },
+            { name: "Pediatrics", value: 18 },
+            { name: "General Medicine", value: 26 }
+          ];
+        })(),
         recentPatients: patientsList.slice(-5).reverse(),
         shifts: [
           { name: "Nurse Kelly Henderson", role: "Nurse", time: "08:00 - 16:00", active: true, img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB3E3D4czQ2WyFUklLEShTpvakILDd2oKeW2gRacONc5PsddD7Zp-0koHPaE1dcs84hb9548ofn-d11m9p8S7breKKUZQ-Z9aYENF7P8cn8QomCfUEtZRIIHU4mw2Q-AN8jEg6SFyL4Jb1jBTBnJU8rbxe1UOxk1Wna-0E70nPywG7REgfFIjVmMQob1Q5Rxy5LcaaV1qTG6BdyvSijX-5K1EZI0BazLkMiXZ3kGOqDRrAbNRhmY0SOmrTCbWLYXutH0l8G7u5blZc" },

@@ -198,7 +198,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
         }
       }
 
-      // Calculate departments case volume dynamically from appointments
+      // Calculate departments case volume dynamically from appointments or doctors
       const totalAppts = await Appointment.countDocuments();
       let cardVal = 0, neuroVal = 0, pedsVal = 0, oncVal = 0, erVal = 0;
       if (totalAppts > 0) {
@@ -207,6 +207,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
         pedsVal = Math.round((await Appointment.countDocuments({ dept: 'Pediatrics' }) / totalAppts) * 100);
         oncVal = Math.round((await Appointment.countDocuments({ dept: 'Oncology' }) / totalAppts) * 100);
         erVal = Math.round(((await Appointment.countDocuments({ dept: 'Emergency' }) + await Appointment.countDocuments({ dept: 'ER' })) / totalAppts) * 100);
+      } else if (doctorsCount > 0) {
+        // Fallback: use doctor distribution by department
+        const allDoctors = await Doctor.find();
+        const deptMap: Record<string, number> = {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        allDoctors.forEach((d: any) => { deptMap[d.dept || 'General'] = (deptMap[d.dept || 'General'] || 0) + 1; });
+        const total = allDoctors.length;
+        cardVal = Math.round(((deptMap['Cardiology'] || 0) / total) * 100);
+        neuroVal = Math.round(((deptMap['Neurology'] || 0) / total) * 100);
+        pedsVal = Math.round(((deptMap['Pediatrics'] || 0) / total) * 100);
+        oncVal = Math.round(((deptMap['Oncology'] || 0) / total) * 100);
+        erVal = Math.round((((deptMap['Emergency'] || 0) + (deptMap['ER'] || 0)) / total) * 100);
       }
 
       // Load active doctors and staff to build dynamic shifts array

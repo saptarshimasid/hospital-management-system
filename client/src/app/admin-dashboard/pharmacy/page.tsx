@@ -315,7 +315,7 @@ export default function PharmacyPage() {
           </div>
           <div>
             <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Cold Vault Temp</p>
-            <h3 className="text-xl font-bold mt-1">-20 °C</h3>
+            <h3 className="text-xl font-bold mt-1">-15 °C</h3>
           </div>
         </div>
       </div>

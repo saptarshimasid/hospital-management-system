@@ -96,6 +96,14 @@ export default function DashboardLayout({
         body: JSON.stringify(profile)
       });
       if (res.ok) {
+        const savedData = await res.json();
+        setProfile({
+          img: savedData.img || defaultProfile.img,
+          name: savedData.name || defaultProfile.name,
+          age: savedData.age || defaultProfile.age,
+          email: savedData.email || defaultProfile.email,
+          designation: savedData.designation || defaultProfile.designation
+        });
         setProfileOpen(false);
       } else {
         console.error("Failed to save profile");
